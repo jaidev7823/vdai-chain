@@ -1,0 +1,17 @@
+Changelog¶
+What's new and changed for scripting?
+Adobe Premiere Pro 23.0¶
+Warning
+Decision: No further changes or improvements to Premiere Pro's ExtendScript API are planned or scheduled. Any such changes will be reconsidered, once Premiere Pro moves to UXP-based extensibility.
+Adobe Premiere Pro 15.4¶
+- Access to the currently active project selection
+- New API to move a trackItem.
+- Added: TrackItem.move()
+- New APIs to set the disabled state of a trackItem.
+- Added: TrackItem.disabled
+Adobe Premiere Pro 14.0¶
+- Scripting access to Auto-Reframe:
+Adobe Premiere Pro 13.x¶
+- Scripting access to Marker colors:
+- Added: Marker.getColorByIndex()
+- Added: Marker.setColorByIndex()

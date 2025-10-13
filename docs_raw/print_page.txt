@@ -1,0 +1,4187 @@
+Premiere Pro Scripting Guide
+byhttps://docsforadobe.dev
+| Hosted at | https://ppro-scripting.docsforadobe.dev/ |
+| Repository | https://github.com/docsforadobe/premiere-scripting-guide/ |
+| Copyright | All content is copyright Adobe Systems Incorporated. |
+Page Contents
+Premiere Pro Scripting Guide¶
+This reference is a public compendium of information about the methods and members available via the API.
+Premiere Pro provides an ExtendScript-based API, allowing for broad control of the entire application. ExtendScript can access and manipulation of most project elements, including metadata, exporting and rendering options.
+Adobe wants your integration to succeed; please don't hesitate to contact us with questions, problems, or feature requests.
+3rd Party Scripting is Moving to UXP¶
+Before you go any further, though, know that Adobe is moving away from Extendscript, and to UXP - Unified Extensibility Platform. Have a look at the API Documentation, and sample plugins
+Although Extendscript will be supported at least through the end of 2025, no updates will be made to the API.
+Navigating the Guide¶
+If you're not sure where to start, take a look at the Overview for how scripting works in Premiere Pro, or the Changelog for updates to the scripting API over time.
+Contribution¶
+This endeavour is primarily community-supported & run; contributors are welcome and encouraged to suggest fixes, adjustments, notes/warnings, and anything else that may help the project.
+For specific information on how to contribute & best practices, see the Documentation Contribution Guide.
+Licensing & Ownership¶
+This project exists for educational purposes only.
+All content is copyright Adobe Systems Incorporated.
+Introduction
+Overview¶
+Premiere Pro provides an ExtendScript API, allowing for the access and manipulation of most project elements, including metadata, exporting and rendering options.
+Note
+This document does not teach ExtendScript, ExtendScript debugging, or other development techniques. It focuses on the Premiere Pro ExtendScript API and the execution context for scripts.
+While initially incomplete and intended only for internal testing, the Premiere Pro ExtendScript API has been growing steadily for many years. As of 12.1.1 (the current release, as of this writing), the API offers thorough access to (and, often, control over) all project elements, as well as application settings.
+Example code¶
+The PProPanel sample exercises Premiere Pro's ExtendScript API: https://github.com/Adobe-CEP/Samples/tree/master/PProPanel.
+Development and debugging tools¶
+ExtendScript Toolkit (ESTK) is longer updated by Adobe; the recommended debugging environment for ExtendScript is Microsoft Visual Studio Code, with Adobe's ExtendScript debugging extension:
+https://marketplace.visualstudio.com/items?itemName=Adobe.extendscript-debug
+Changelog¶
+What's new and changed for scripting?
+Adobe Premiere Pro 23.0¶
+Warning
+Decision: No further changes or improvements to Premiere Pro's ExtendScript API are planned or scheduled. Any such changes will be reconsidered, once Premiere Pro moves to UXP-based extensibility.
+Adobe Premiere Pro 15.4¶
+- Access to the currently active project selection
+- New API to move a trackItem.
+- Added: TrackItem.move()
+- New APIs to set the disabled state of a trackItem.
+- Added: TrackItem.disabled
+Adobe Premiere Pro 14.0¶
+- Scripting access to Auto-Reframe:
+Adobe Premiere Pro 13.x¶
+- Scripting access to Marker colors:
+- Added: Marker.getColorByIndex()
+- Added: Marker.setColorByIndex()
+How to Execute ExtendScript in Premiere Pro¶
+Executing scripts from within CEP panels is the recommended approach.
+With additional configuration work, it's also possible to pass scripts to Premiere Pro on a command line. This is not recommended, as behavior varies across platforms, and preliminary configuration is necessary before such execution is enabled.
+Use VSCode with Adobe's extension for development and debugging; for deployed workflows, stick with panels whenever possible.
+Application
+Application object¶
+app
+Description¶
+Provides access to objects and application settings within Premiere Pro.
+The single global object is always available by its name, app
+.
+Attributes¶
+app.anywhere¶
+app.anywhere
+Description¶
+An Anywhere object, providing access to available Anywhere servers. Only available when running in Anywhere configuration (discontinued).
+Type¶
+app.build¶
+app.build
+Description¶
+The number of the build of Premiere Pro being run.
+Type¶
+String; read-only.
+Example¶
+Get a build version of current application.
+// in Adobe Premiere Pro version 14.3.1 (Build 45)...
+parseInt(app.build); // 45
+app.encoder¶
+app.encoder
+Description¶
+Provides access to Adobe Media Encoder (on the same system).
+Warning
+app.encoder
+is broken on Premiere Pro 14.3.1 - 15 on Mac only. Fixed in 22 and up. See this discussion.
+Type¶
+app.getAppPrefPath¶
+app.getAppPrefPath
+Description¶
+The path containing the currently active "Adobe Premiere Pro Prefs" file.
+Type¶
+String; read-only.
+Example¶
+Get a path to a currently active preference file
+app.getAppPrefPath;
+// /Users/USERNAME/Documents/Adobe/Premiere Pro/14.0/Profile-USERNAME/
+app.getAppSystemPrefPath¶
+app.getAppSystemPrefPath
+Description¶
+Premiere Pro's active configuration files, not specific to a given user.
+Type¶
+String; read-only.
+Example¶
+Get a path to a currently active configuration folder
+app.getAppSystemPrefPath;
+// /Library/Application Support/Adobe/Adobe Premiere Pro 2020/
+app.getPProPrefPath¶
+app.getPProPrefPath
+Description¶
+The path containing the currently active "Adobe Premiere Pro Prefs" file.
+Type¶
+String; read-only.
+Example¶
+Get a path to a currently active preference file
+app.getPProPrefPath;
+// /Users/USERNAME/Documents/Adobe/Premiere Pro/14.0/Profile-USERNAME/
+app.getPProSystemPrefPath¶
+app.getPProSystemPrefPath
+Description¶
+Premiere Pro's active configuration files, not specific to a given user.
+Type¶
+String; read-only.
+Example¶
+Get a path to a currently active configuration folder
+app.getPProSystemPrefPath;
+// /Library/Application Support/Adobe/Adobe Premiere Pro 2020/
+app.learnPanelContentDirPath¶
+app.learnPanelContentDirPath
+Description¶
+Get the Learn panel's contents directory path.
+Type¶
+String; read-only.
+Example¶
+Get a path to a Learn panel's directory
+app.learnPanelContentDirPath;
+// /Users/Shared/Adobe/Premiere Pro 2020/Learn Panel/
+app.learnPanelExampleProjectDirPath¶
+app.learnPanelExampleProjectDirPath
+Description¶
+Get the Learn panel's example projects directory path.
+Type¶
+String; read-only.
+Example¶
+Get a path to a Learn panel's example projects' directory
+app.learnPanelExampleProjectDirPath;
+// /Users/Shared/Adobe/Premiere Pro/14.0/Tutorial/Going Home project/
+app.metadata¶
+app.metadata
+Description¶
+Get applications Metadata object.
+Type¶
+Metadata object, read-only.
+app.path¶
+app.path
+Description¶
+Get a path to applications executable file.
+Type¶
+String; read-only.
+Example¶
+Get a path to applications executable file.
+app.path;
+// /Applications/Adobe Premiere Pro 2020/Adobe Premiere Pro 2020.app/
+app.production¶
+app.production
+Description¶
+The currently active production.
+Type¶
+Production object if at least 1 production is open, null
+otherwise.
+app.project¶
+app.project
+Description¶
+The currently active project.
+Type¶
+app.projectManager¶
+app.projectManager
+Description¶
+Provides access to project management functions within Premiere Pro.
+Type¶
+app.projects¶
+app.projects
+Description¶
+An array referencing all open projects; numProjects
+contains size.
+Type¶
+ProjectCollection object, read-only.
+app.properties¶
+app.properties
+Description¶
+The properties object provides methods to access and modify preference values.
+Type¶
+Properties object, read-only;
+app.sourceMonitor¶
+app.sourceMonitor
+Description¶
+Provides access to SourceMonitor object.
+Type¶
+app.userGuid¶
+app.userGuid
+Description¶
+A unique identifier for the currently logged-in Creative Cloud user.
+Type¶
+String; read-only.
+app.version¶
+app.version
+Description¶
+The version of Premiere Pro, providing the API.
+Type¶
+String; read-only.
+Example¶
+Get a version of a current application (Adobe Premiere Pro version 14.3.1 (Build 45))
+app.version; // 14.3.1
+Methods¶
+app.enableQE()¶
+app.enableQE()
+Description¶
+Enables Premiere Pro's QE DOM.
+Parameters¶
+None.
+Returns¶
+Returns true
+if QE DOM was enabled.
+app.getEnableProxies()¶
+app.getEnableProxies()
+Description¶
+Determines whether proxy usage is currently enabled.
+Parameters¶
+None.
+Returns¶
+Returns 1
+if proxies are enabled, 0
+if they are not.
+app.getWorkspaces()¶
+app.getWorkspaces()
+Description¶
+Obtains an array of available workspaces as Strings.
+Parameters¶
+None.
+Returns¶
+Array of strings if successful, null
+if unsuccessful.
+Example¶
+Get a list of available workspaces.
+app.getWorkspaces();
+/* [
+"All Panels",
+"Assembly",
+"Audio",
+"Color",
+"Editing",
+"Effects",
+"Graphics",
+"Learning",
+"Libraries",
+"Metalogging",
+"Production"
+]; */
+app.isDocument()¶
+app.isDocument(path)
+Description¶
+Determines whether the file at path can be opened as a Premiere Pro project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to a file. |
+Returns¶
+Returns true
+if file can be opened as a Premiere Pro project.
+Example¶
+Test for valid project files
+app.isDocument('~/Desktop/myProject.prproj'); // true
+app.isDocument('~/Desktop/textFile.txt'); // false
+app.isDocument('~/Desktop/footageFile.mov'); // false
+app.isDocument('~/Desktop/imageFile.mov'); // false
+app.isDocumentOpen()¶
+app.isDocumentOpen()
+Description¶
+Determines whether there are any projects currently open.
+Parameters¶
+None.
+Returns¶
+Returns true
+if at least 1 project is open; otherwise false
+.
+app.newProject()¶
+app.newProject(path)
+Description¶
+Creates a new .prproj Project object, at the specified path.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A full path to new project; a .prproj extension will not be added. |
+Returns¶
+Returns true
+if successful.
+app.openDocument()¶
+app.openDocument(path, [suppressConversionDialog], [bypassLocateFileDialog], [bypassWarningDialog], [doNotAddToMRUList])
+Description¶
+Opens the file at the specified path, as a Premiere Pro Project object.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | Full path to the document to be opened. |
+suppressConversionDialog |
+Boolean | Optional. Suppress project conversion dialog. |
+bypassLocateFileDialog |
+Boolean | Optional. Bypass the locate file dialog. |
+bypassWarningDialog |
+Boolean | Optional. Bypass warning dialog. |
+doNotAddToMRUList |
+Boolean | Optional. Skip adding this file to the Most Recently Used List. |
+Returns¶
+Returns true
+if file was successfully opened.
+app.openFCPXML()¶
+app.openFCPXML(path, projPath)
+Description¶
+Opens an FCP XML file as a Premiere Pro Project object (specified in projPath).
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | |
+projPath |
+String |
+Returns¶
+Returns true
+if file was successfully opened as a Premiere Pro Project object.
+app.quit()¶
+app.quit()
+Description¶
+Quits Premiere Pro; user will be prompted to save any changes to Project object.
+Parameters¶
+None.
+Returns¶
+Nothing.
+app.setEnableProxies()¶
+app.setEnableProxies(enabled)
+Description¶
+Determines whether proxy usage is currently enabled.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+enabled |
+Integer | 1 turns proxies on, 0 turns them off. |
+Returns¶
+Returns 1
+if proxy enablement was changed.
+app.setExtensionPersistent()¶
+app.setExtensionPersistent(extensionID, persistent)
+Description¶
+Whether extension with the given extensionID persists, within this session.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+extensionID |
+String | Which extension to modify. |
+persistent |
+Integer | Pass 1 to keep extension in memory, 0 to allow unloading. |
+Returns¶
+Returns true
+if successful.
+Example¶
+var extensionID = 'com.adobe.PProPanel';
+// 0 - while testing (to enable rapid reload);
+// 1 - for "Never unload me, even when not visible."
+var persistent = 0;
+app.setExtensionPersistent(extensionID, persistent);
+app.setScratchDiskPath()¶
+app.setScratchDiskPath(path, scratchDiskType)
+Description¶
+Specifies the path to be used for one of Premiere Pro's scratch disk paths.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+The new path to be used. |
+|
+|
+|
+Enumerated value, must be one of the following:
+|
+Returns¶
+Returns true
+if successful.
+Example¶
+var scratchPath = Folder.selectDialog('Choose new scratch disk folder');
+if (scratchPath && scratchPath.exists) {
+app.setScratchDiskPath(scratchPath.fsName, ScratchDiskType.FirstAutoSaveFolder);
+}
+app.setSDKEventMessage()¶
+app.setSDKEventMessage(message, decorator)
+Description¶
+Writes a string to Premiere Pro's Events panel.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+A message to display. |
+|
+|
+String |
+Decorator, one of:
+|
+Returns¶
+Returns true
+if successful.
+app.setWorkspace()¶
+app.setWorkspace(workspace)
+Description¶
+Set workspace as active. Use app.getWorkspaces() to get a list of all available workspaces.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+workspace |
+String | The name of the workspace. |
+Returns¶
+Boolean.
+Example¶
+Activate "Editing" workspace.
+var workspace = 'Editing';
+if (app.setWorkspace(workspace)) {
+alert('Workspace changed to "' + workspace + '"');
+} else {
+alert('Could not set "' + workspace + '" workspace');
+}
+app.trace()¶
+app.trace()
+Description¶
+Writes a string to Premiere Pro's debug console.
+Parameters¶
+None.
+Returns¶
+Returns true
+if trace was added.
+app.getProjectViewIDs()¶
+app.getProjectViewIDs()
+Description¶
+Returns the view IDs of currently-open views, associated with any project.
+Parameters¶
+None.
+Returns¶
+An array of view IDs; can be null.
+Example¶
+var allViewIDs = app.getProjectViewIDs();
+if (allViewIDs){
+var firstOne = allViewIDs[0];
+} else {
+// No views open.
+}
+app.getProjectFromViewID()¶
+app.getProjectFromViewID()
+Description¶
+Returns the Project associated with the provided View ID.
+Parameters¶
+A View ID, obtained from getProjectViewIDs
+.
+Returns¶
+A Project object, for the project associated with the provided View ID. Can be null
+.
+Example¶
+var allViewIDs = app.getProjectViewIDs();
+if (allViewIDs){
+var firstOne = allViewIDs[0];
+if (firstOne){
+var thisProject = getProjectFromViewID(firstOne);
+if (thisProject){
+var name = thisProject.name;
+} else {
+// no project associated with that view ID.
+}
+} else {
+// No views open.
+}
+app.getCurrentProjectViewSelection()¶
+app.getCurrentProjectViewSelection()
+Description¶
+Returns an array of ProjectItems selected, in the current active project view.
+Parameters¶
+None.
+Returns¶
+An array of ProjectItems; can be null.
+Example¶
+var selectedItems = app.getCurrentProjectViewSelection();
+if (selectedItems){
+var firstOne = selectedItems[0];
+} else {
+// No projectItems selected.
+}
+app.broadcastPrefsChanged()¶
+app.broadcastPrefsChanged()
+Description¶
+Notifies Application that preferences have changed.
+Parameters¶
+String ID of the preference that changed. (currently only listens to "BE::PreferencesScratchDisksChanged")
+Returns¶
+Returns true
+if update was successful.
+Example¶
+app.broadcastPrefsChanged("BE::PreferencesScratchDisksChanged");
+General
+Anywhere object¶
+app.anywhere
+Description¶
+The Anywhere
+object represents any Adobe Anywhere or Team Projects servers available.
+Attributes¶
+None.
+Methods¶
+Anywhere.getAuthenticationToken()¶
+app.anywhere.getAuthenticationToken()
+Description¶
+Retrieves an authentication token.
+Parameters¶
+None.
+Returns¶
+A String containing the login token, or 0
+if unsuccessful.
+Anywhere.getCurrentEditingSessionActiveSequenceURL()¶
+app.anywhere.getCurrentEditingSessionActiveSequenceURL()
+Description¶
+Retrieves the URL of the currently active sequence, within a production.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the asset's URL, or 0
+if unsuccessful (including if there is no active sequence, or if no editing session is opened).
+Anywhere.getCurrentEditingSessionSelectionURL()¶
+app.anywhere.getCurrentEditingSessionSelectionURL()
+Description¶
+Retrieves the URL of the currently selected single asset. Will fail if more or fewer than one item is selected.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the asset's URL, or 0
+if unsuccessful (including if more or fewre than one item is selected).
+Anywhere.getCurrentEditingSessionURL()¶
+app.anywhere.getCurrentEditingSessionURL()
+Description¶
+Retrieves the URL of the Production, currently being edited.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the production's URL, or 0
+if unsuccessful.
+Anywhere.isProductionOpen()¶
+app.anywhere.isProductionOpen()
+Description¶
+Retrieves whether an Anywhere or Team Projects production is currently open.
+Parameters¶
+None.
+Returns¶
+Returns true
+if a production is open; false
+if not.
+Anywhere.listProductions()¶
+app.anywhere.listProductions()
+Description¶
+Retrieves production names, available to the current user, on the current server.
+Parameters¶
+None.
+Returns¶
+Returns an Array of Strings containing the names of avialable productions, or 0
+if unsuccessful.
+Anywhere.openProduction()¶
+app.anywhere.openProduction(productionURL)
+Description¶
+Opens the production at the specified URL.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+productionURL |
+String | The url of the production to open. |
+Returns¶
+Returns 0
+if successful.
+Anywhere.setAuthenticationToken()¶
+app.anywhere.setAuthenticationToken(token, emailAddress)
+Description¶
+Logs the specified email address into the server, using the provided token.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+token |
+String | An authorization token. |
+emailAddress |
+String | The associated email address. |
+Returns¶
+Returns 0
+if successful.
+Encoder object¶
+app.encoder
+Description¶
+The encoder
+object represents Adobe Media Encoder, and is used for local rendering, outside of Premiere Pro.
+Warning
+app.encoder
+is broken on Premiere Pro 14.3.1 - 15 on Mac only. Fixed in 22 and up. See here.
+Attributes¶
+None.
+Methods¶
+Encoder.encodeFile()¶
+app.encoder.encodeFile(filePath, outputPath, presetPath, workArea, removeUponCompletion, inPoint, outPoint)
+Description¶
+Makes Adobe Media Encoder render (optionally, a specified range from) the specified file, with the specified settings.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+A path to a file to render. |
+|
+|
+String |
+A path to an output file. |
+|
+|
+String |
+A path to a preset (.epr) file. |
+|
+|
+Integer |
+Integer denoting work area to be used:
+|
+|
+|
+Integer |
+If |
+|
+|
+A Time object, for the in point of new file. |
+|
+|
+|
+A Time object, for the out point of new file. |
+Returns¶
+Returns a job ID as a String, for the render job added to the AME queue, or 0
+if unsuccessful.
+Encoder.encodeProjectItem()¶
+app.encoder.encodeProjectItem(projectItem, outputPath, presetPath, workArea, removeUponCompletion)
+Description¶
+Makes Adobe Media Encoder render (optionally, a specified range from) the specified ProjectItem object, with the specified settings.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+A project item to render. |
+|
+|
+|
+String |
+A path to an output file. |
+|
+|
+String |
+A path to a preset (.epr) file. |
+|
+|
+Integer |
+Integer denoting work area to be used:
+|
+|
+|
+Integer |
+If |
+Returns¶
+Returns a job ID as a String, for the render job added to the AME queue, or 0
+if unsuccessful.
+Encoder.encodeSequence()¶
+app.encoder.encodeSequence(sequence, outputPath, presetPath, workArea, removeUponCompletion)
+Description¶
+Makes Adobe Media Encoder render the specified Sequence object, with the specified settings.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+A sequence to render. |
+|
+|
+|
+String |
+A path to an output file. |
+|
+|
+String |
+A path to a preset (.epr) file. |
+|
+|
+Integer |
+Integer denoting work area to be used:
+|
+|
+|
+Integer |
+If |
+Returns¶
+Returns a job ID as a String, for the render job added to the AME queue, or 0
+if unsuccessful.
+Encoder.launchEncoder()¶
+app.encoder.launchEncoder()
+Description¶
+Launches Adobe Media Encoder.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Encoder.setEmbeddedXMPEnabled()¶
+app.encoder.setEmbeddedXMPEnabled(enabled)
+Description¶
+Determines whether embedded XMP metadata, will be output.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+enabled |
+Integer | Pass 1 to enable sidecar output, 0 to disable. |
+Returns¶
+Returns 0
+if successful.
+Note
+Premiere Pro and Adobe Media Encoder will output sidecar XMP for some file formats, and embed XMP for most.
+The applications make this determination based on numerous factors, and there is no API control to "force" sidecar or embedded output, for formats which normally use "the other approach".
+Encoder.setSidecarXMPEnabled()¶
+app.encoder.setSidecarXMPEnabled(enabled)
+Description¶
+Determines whether a sidecar file containing XMP metadata, will be output.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+enabled |
+Integer | Pass 1 to enable sidecar output, 0 to disable. |
+Returns¶
+Returns 0
+if successful.
+Encoder.startBatch()¶
+app.encoder.startBatch()
+Description¶
+Makes Adobe Media Encoder start rendering its render queue.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Marker object¶
+app.project.activeSequence.markers.getFirstMarker()
+app.project.rootItem.children[index].getMarkers().getFirstMarker()
+Description¶
+Both Project items and sequences have associated Marker objects, which represent their associated markers.
+Attributes¶
+Marker.comments¶
+app.project.activeSequence.markers.getFirstMarker().comments
+app.project.rootItem.children[index].getMarkers().getFirstMarker().comments
+Description¶
+The comments within the marker.
+Type¶
+String; read/write.
+Marker.end¶
+app.project.activeSequence.markers.getFirstMarker().end
+app.project.rootItem.children[index].getMarkers().getFirstMarker().end
+Description¶
+A Time object containing the value of the ending of the marker.
+Type¶
+Time object; read/write.
+Marker.guid¶
+app.project.activeSequence.markers.getFirstMarker().guid
+app.project.rootItem.children[index].getMarkers().getFirstMarker().guid
+Description¶
+The unique identifier of the marker, created at time of instantiation.
+Type¶
+String; read-only.
+Marker.name¶
+app.project.activeSequence.markers.getFirstMarker().name
+app.project.rootItem.children[index].getMarkers().getFirstMarker().name
+Description¶
+The name of the marker.
+Type¶
+String; read/write.
+Marker.start¶
+app.project.activeSequence.markers.getFirstMarker().start
+app.project.rootItem.children[index].getMarkers().getFirstMarker().start
+Description¶
+A Time object containing the value of the beginning of the marker.
+Type¶
+Time object; read/write.
+Marker.type¶
+app.project.activeSequence.markers.getFirstMarker().type
+app.project.rootItem.children[index].getMarkers().getFirstMarker().type
+Description¶
+The type of marker, one of:
+"Comment"
+"Chapter"
+"Segmentation"
+"WebLink"
+Note
+Premiere Pro can import some marker types which cannot be created from within Premiere Pro.
+Type¶
+String; read-only.
+Methods¶
+Marker.getColorByIndex()¶
+app.project.activeSequence.markers.getFirstMarker().getColorByIndex(index)
+app.project.rootItem.children[index].getMarkers().getFirstMarker().getColorByIndex(index)
+Note
+This functionality was added in Adobe Premire Pro 13.x.
+Description¶
+Gets the marker color index.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+index |
+Integer | Index of the marker to be read. |
+Returns¶
+Returns the color index as an Integer.
+Marker.getWebLinkFrameTarget()¶
+app.project.activeSequence.markers.getFirstMarker().getWebLinkFrameTarget()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().getWebLinkFrameTarget()
+Description¶
+Retrieves the frame target, from the marker's FrameTarget field.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the frame target, or 0
+if unsuccessful.
+Marker.getWebLinkURL()¶
+app.project.activeSequence.markers.getFirstMarker().getWebLinkURL()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().getWebLinkURL()
+Description¶
+Retrieves the URL, from the marker's URL field.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the URL, or 0
+if unsuccessful.
+Marker.setColorByIndex()¶
+app.project.activeSequence.markers.getFirstMarker().setColorByIndex(colorIndex, markerIndex)
+app.project.rootItem.children[index].getMarkers().getFirstMarker().setColorByIndex(colorIndex, markerIndex)
+Note
+This functionality was added in Adobe Premire Pro 13.x.
+Description¶
+Sets the marker color by index. Color indices listed below.
+0
+= Green1
+= Red2
+= Purple3
+= Orange4
+= Yellow5
+= White6
+= Blue7
+= Cyan
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+colorIndex |
+Integer | Index of the color to apply to the marker. |
+markerIndex |
+Integer | Index of the marker to be set. |
+Returns¶
+Returns undefined
+.
+Marker.setTypeAsChapter()¶
+app.project.activeSequence.markers.getFirstMarker().setTypeAsChapter()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().setTypeAsChapter()
+Description¶
+Sets the type of the marker to "Chapter".
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Marker.setTypeAsComment()¶
+app.project.activeSequence.markers.getFirstMarker().setTypeAsComment()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().setTypeAsComment()
+Description¶
+Sets the type of the marker to "Comment".
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Marker.setTypeAsSegmentation()¶
+app.project.activeSequence.markers.getFirstMarker().setTypeAsSegmentation()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().setTypeAsSegmentation()
+Description¶
+Sets the type of the marker to "Segmentation".
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Marker.setTypeAsWebLink()¶
+app.project.activeSequence.markers.getFirstMarker().setTypeAsWebLink()
+app.project.rootItem.children[index].getMarkers().getFirstMarker().setTypeAsWebLink()
+Description¶
+Sets the type of the marker to "WebLink".
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Metadata object¶
+app.metadata
+Description¶
+add description here
+Attributes¶
+Metadata.getMetadata¶
+app.metadata.getMetadata
+Description¶
+add description here
+Type¶
+String.
+Methods¶
+Metadata.addMarker()¶
+app.metadata.addMarker()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Metadata.deleteMarker()¶
+app.metadata.deleteMarker()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Metadata.setMarkerData()¶
+app.metadata.setMarkerData()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Metadata.setMetadataValue()¶
+app.metadata.setMetadataValue()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Metadata.updateMarker()¶
+app.metadata.updateMarker()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Production object¶
+app.production
+Description¶
+The Production object lets ExtendScript access and manipulate productions, insert projects, create new projects and bins, and move existing Production projects to Trash.
+Attributes¶
+Production.name¶
+app.production.name
+Description¶
+The name of the production.
+Type¶
+String.
+Production.path¶
+app.production.path
+Description¶
+The path to the Production folder.
+Type¶
+String.
+Production.projects¶
+app.production.projects
+Description¶
+An array of the projects containined within the Production, which are currently open. Does not include non-open projects.
+Type¶
+ProjectCollection object, read-only.
+Methods¶
+Production.addProject()¶
+app.production.addProject(srcProjectPath, destProjectPath)
+Description¶
+Copies a project from some other location, into the Production directory.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+srcProjectPath |
+String | A path to the source project. |
+destProjectPath |
+String | A destination path for added project. |
+Returns¶
+Returns true
+if successful.
+Production.close()¶
+app.production.close()
+Description¶
+Closes the Production, and all open projects from within that Production.
+Parameters¶
+None.
+Returns¶
+Returns true
+if successful.
+Production.getLocked()¶
+app.production.getLocked(project)
+Description¶
+Returns the lock state of a single project within the Production.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+project |
+Project object | The project |
+Returns¶
+Returns true
+if the Project is locked, false
+if the Project is unlocked.
+Production.moveToTrash()¶
+app.production.moveToTrash(projectOrFolderPath, suppressUI, saveProject)
+Description¶
+Moves the specified path ("bin") or .prproj into the Production's Trash folder.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectOrFolderPath |
+String | A path to the source project. |
+suppressUI |
+Boolean | Whether to suppress any resultant dialogues. |
+saveProject |
+Boolean | Whether to save the project(s) first. |
+Returns¶
+Returns true
+if successful.
+Production.setLocked()¶
+app.production.setLocked(project,locked)
+Description¶
+Sets the lock state of the specified project within the Production.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+project |
+Project object |
+The project |
+locked |
+Boolean | True for locked, false for unlocked. |
+Returns¶
+Returns true
+if successful.
+Project object¶
+app.project
+Description¶
+Represents a Premiere Pro project. As of Premiere Pro 12.0, multiple projects may be open at the same time.
+Attributes¶
+Project.activeSequence¶
+app.project.activeSequence
+Description¶
+The currently active Sequence object, within the project.
+Type¶
+A Sequence object, or 0
+if no sequence is currently active.
+Project.cloudProjectlocalID¶
+app.project.cloudProjectlocalID
+Description¶
+The ID of cloud project.
+Type¶
+String; read/only.
+Project.documentID¶
+app.project.documentID
+Description¶
+A unique identifier for this project, in format of xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+.
+Type¶
+String; read-only.
+Project.isCloudProject¶
+app.project.isCloudProject
+Description¶
+Check whether the project is cloud project.
+Type¶
+Boolean; read-only.
+Project.name¶
+app.project.name
+Description¶
+The name of the project.
+Type¶
+String; read-only.
+Project.path¶
+app.project.path
+Description¶
+The file path of the project.
+Type¶
+String; read-only.
+Example¶
+Get a path of a curently active project
+app.project.path; // /Users/USERNAME/Desktop/Project.prproj
+Project.rootItem¶
+app.project.rootItem
+Description¶
+A ProjectItem object representing the "root" of the project.
+Type¶
+A ProjectItem object; this will always be of type ProjectItemType_BIN
+.
+Project.sequences¶
+app.project.sequences
+Description¶
+The sequences within the project.
+Type¶
+SequenceCollection object, read-only.
+Methods¶
+Project.addPropertyToProjectMetadataSchema()¶
+app.project.addPropertyToProjectMetadataSchema(propertyName, propertyLabel, propertyType)
+Description¶
+Adds a new field of the specified type to Premiere Pro's private project metadata schema.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+A name of property to be added. |
+|
+|
+String |
+A label of property to be added. |
+|
+|
+Integer |
+Must be one of the following:
+|
+Returns¶
+Returns true
+if successful, undefined
+if unsuccessful.
+Project.closeDocument()¶
+app.project.closeDocument(saveFirst, promptIfDirty)
+Description¶
+Closes this project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+saveFirst |
+Integer | If 1 , the project will be saved before closing. |
+promptIfDirty |
+Integer | If 1 , the user will be asked whether they want to save changes first. |
+Returns¶
+Returns 0
+if successful.
+Project.consolidateDuplicates()¶
+app.project.consolidateDuplicates()
+Description¶
+Invokes Premiere Pro's "Consolidate Duplicate Footage" functionality, as available from the UI.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Project.createNewSequence()¶
+app.project.createNewSequence(sequenceName, sequenceID)
+Description¶
+Creates a new Sequence object with the specified ID.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequenceName |
+String | A name of a sequence. |
+sequenceID |
+String | An uniquely identifying ID for a new sequence. |
+Returns¶
+Returns a Sequence object if creation was successful, or 0
+if unsuccessful.
+Project.createNewSequenceFromClips()¶
+app.project.createNewSequenceFromClips(sequenceName, arrayOfProjectItems, [destinationBin])
+Description¶
+Creates a new Sequence object with the given name, in the specified destination bin, and sequentially inserts project items into it.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequenceName |
+String | Optional. A name for a new sequence. |
+arrayOfProjectItems |
+Array of ProjectItem objects | An array of project items to be inserted into sequence. |
+destinationBin |
+ProjectItem object | Optional. A bin to contain sequence. |
+Returns¶
+Returns the newly-created Sequence object if successful; 0 if unsuccessful.
+Project.deleteSequence()¶
+app.project.deleteSequence(sequence)
+Description¶
+Deletes the specified Sequence object from the project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequence |
+Sequence object | A sequence to delete. |
+Returns¶
+Returns true
+if successful, false
+if unsuccessful.
+Project.exportAAF()¶
+app.project.exportAAF(sequenceToExport, outputPath, mixdownVideo, explodeToMono, sampleRate, bitsPerSample, embedAudio, audioFileFormat, trimSources, handleFrames, presetPath, renderAudioEffects, includeClipCopies, preserveParentFolder)
+Description¶
+Exports an AAF file of the specified Sequence object, using the specified settings.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequenceToExport |
+Sequence object | A sequence to export. |
+outputPath |
+String | An output path for .aaf file. |
+mixdownVideo |
+Integer | If 1 , render video before export. |
+explodeToMono |
+Integer | If 1 , breaks out stereo tracks to mono. |
+sampleRate |
+Integer | The sample rate of output audio. |
+bitsPerSample |
+Integer | The bits per sample of audio output. |
+embedAudio |
+Integer | If 1 , audio is embedded, if 0 , external. |
+audioFileFormat |
+Integer | 0 is AIFF, 1 is WAV. |
+trimSources |
+Integer | If 1 , trim and re-encode media before export; 0 exports the entire file. |
+handleFrames |
+Integer | The number of handle frames (from 0 to 1000). |
+presetPath |
+String | A path to export preset (.epr) file. |
+renderAudioEffects |
+Integer | If 1 , render audio effects before export. |
+includeClipCopies |
+Integer | If 1 , include each copy of a clip. |
+preserveParentFolder |
+Integer | If 1 , preserves the parent folder, in output. |
+Returns¶
+Returns 0
+if successful.
+Project.exportFinalCutProXML()¶
+app.project.exportFinalCutProXML(outputPath, suppressUI)
+Description¶
+Exports an FCP XML representation of the entire project, to the specified output path.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+outputPath |
+String | An output path for .xml file. |
+suppressUI |
+Integer | If 1 , no warnings or alerts will be shown, during the export. |
+Returns¶
+Returns 0
+if successful.
+Project.exportOMF()¶
+app.project.exportOMF(sequence, outputPath, omfTitle, sampleRate, bitsPerSample, audioEncapsulated, audioFileFormat, trimAudioFiles, handleFrames, includePan)
+Description¶
+Exports an OMF file of the specified Sequence object, using the specified settings.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequence |
+Sequence object | The sequence to be output. |
+filePath |
+String | An output path for .omf file. |
+omfTitle |
+String | The title of the OMF. |
+sampleRate |
+The sample rate of output audio. | |
+bitsPerSample |
+The bits per sample of audio output. | |
+audioEncapsulated |
+Integer | If 1 , audio is embedded, if 0 , external. |
+audioFileFormat |
+Integer | 0 is AIFF, 1 is WAV. |
+trimAudioFiles |
+Integer | 1 means yes, trim audio files. |
+handleFrames |
+Integer | Number of handle frames (from 0 to 1000). |
+includePan |
+Integer | 1 means include pan info; 0 means don't. |
+Returns¶
+Returns 0
+if successful.
+Project.exportTimeline()¶
+app.project.exportTimeline(exportControllerName)
+Description¶
+Exports the currently active Sequence object, using an Export Controller plug-in with the specified name.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+exportControllerName |
+String | The name of the Export Controller plug-in to be used. To use the Premiere Pro SDK example Export Controller, the value would be "SDK Export Controller". |
+Returns¶
+Returns 0
+if successful, or an error code if not.
+Project.getGraphicsWhiteLuminance()¶
+app.project.getGraphicsWhiteLuminance()
+Description¶
+Retrieves the current graphics white luminance value, for this project.
+Parameters¶
+None.
+Returns¶
+Returns the currently selected graphics white value.
+Project.getInsertionBin()¶
+app.project.getInsertionBin()
+Description¶
+Returns a ProjectItem object referencing the bin into which import will occur.
+Parameters¶
+None.
+Returns¶
+Returns a ProjectItem object if successful, 0
+if not.
+Project.getProjectPanelMetadata()¶
+app.project.getProjectPanelMetadata()
+Description¶
+Returns the current layout of the Project panel.
+Parameters¶
+None.
+Returns¶
+Returns a String representing the current Project panel layout, or 0
+if unsuccessful.
+Project.getSharedLocation()¶
+app.project.getSharedLocation()
+Description¶
+Returns the path to the location to which shared files are to be copied.
+Parameters¶
+None.
+Returns¶
+Returns a String containing the path.
+Project.getSupportedGraphicsWhiteLuminances()¶
+app.project.getSupportedGraphicsWhiteLuminances()
+Description¶
+Retrieves the supported graphics white luminance values, for this project.
+Parameters¶
+None.
+Returns¶
+Returns an array of graphics white settings supported by the project; Currently it returns (100, 203, 300)
+Project.importAEComps()¶
+app.project.importAEComps(path, compNames, [targetBin])
+Description¶
+Imports specified Compositions (by name) from the containing After Effects .aep project file. You can specify a target bin within the containing project; otherwise, the Compositions will appear in the most recently targeted bin, within this project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to the After Effects .aep project file. |
+compNames |
+Array of strings | Names of compositions within the specified project, to be imported. |
+targetBin |
+ProjectItem object | Optional. The destination bin for this import. |
+Returns¶
+Returns 0
+if successful.
+Project.importAllAEComps()¶
+app.project.importAllAEComps(path, [targetBin])
+Description¶
+Imports specified Compositions (by name) from the containing After Effects .aep project file. You can specify a target bin within the containing project; otherwise, the Compositions will appear in the most recently targeted bin, within this project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to After Effects .aep project file. |
+targetBin |
+ProjectItem object | Optional. The destination bin for this import. |
+Returns¶
+Returns 0
+if successful.
+Project.importFiles()¶
+app.project.importFiles(filePaths, suppressUI, targetBin, importAsNumberedStills)
+Description¶
+Imports media from the specified file paths.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+filePaths |
+Array of strings | An array of the file paths to be imported. |
+suppressUI |
+Boolean | Whether warning dialogs should be suppressed. |
+targetBin |
+ProjectItem object | The bin into which the files should be imported. |
+importAsNumberedStills |
+Boolean | Whether the file paths should be interpreted as a sequence of numbered stills. |
+Returns¶
+Returns true
+if successful, false
+if not.
+Project.importSequences()¶
+app.project.importSequences(path, sequenceIDs)
+Description¶
+Imports an array of sequence objects (with specified sequenceIDs), from the specified project, into the current project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to a project file. |
+sequenceIDs |
+Array | An array of sequence IDs to import. |
+Returns¶
+Returns 0
+if successful.
+Project.isSharedLocationCopyEnabled()¶
+app.project.isSharedLocationCopyEnabled()
+Description¶
+Determines whether copying to a shared location is enabled, for this project.
+Parameters¶
+None.
+Returns¶
+Returns true
+if copying is enabled; false
+if not.
+Project.newBarsAndTone()¶
+app.project.newBarsAndTone(width, height, timeBase, PARNum, PARDen, audioSampleRate, name)
+Description¶
+Creates a new Sequence object with the given name, based on the specified preset (.sqpreset file).
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+width |
+Integer | |
+height |
+Integer | |
+timeBase |
+A timebase for a new project item. | |
+PARNum |
+Integer | Pixel aspect ration numerator. |
+PARDen |
+Integer | Pixel aspect ration denominator. |
+audioSampleRate |
+Audio sample rate. | |
+name |
+String | Name for a new project item. |
+Returns¶
+Returns a ProjectItem object for the new bars and tone, or 0
+if unsuccessful.
+Project.newSequence()¶
+app.project.newSequence(name, pathToSequencePreset)
+Description¶
+Creates a new Sequence object with the given name, based on the specified preset (.sqpreset file).
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+name |
+String | Name for a new sequence. |
+pathToSequencePreset |
+String | A path to a preset .sqpreset file. |
+Returns¶
+Returns a Sequence object, or 0
+if unsuccessful.
+Project.openSequence()¶
+app.project.openSequence(sequence.sequenceID)
+Description¶
+Makes the Sequence object with the provided sequence ID, active. This will open the sequence in the Timeline panel.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequenceID |
+Sequence.sequenceID | A valid sequence ID that should be opened. |
+Returns¶
+Returns true
+if successful, false
+if not.
+Project.pauseGrowing()¶
+app.project.pauseGrowing(pause)
+Description¶
+Pauses (and resumes) growing file capture.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+pause |
+Integer | If 1 , growing files are enabled. |
+Returns¶
+Returns 0
+if successful.
+Project.save()¶
+app.project.save()
+Description¶
+Saves the project, at its current path.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+Project.saveAs()¶
+app.project.saveAs(path)
+Description¶
+Exports the current project to a new unique file path, opens the project from the new location, and closes the previously-opened (and identical) project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to a new file. |
+Returns¶
+Returns 0
+if successful, or an error code if not.
+Project.setEnableTranscodeOnIngest()¶
+app.project.setEnableTranscodeOnIngest(state)
+Description¶
+Controls the enablement of transcode-upon-ingest behavior, for the given project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+state |
+Boolean | The desired state. |
+Returns¶
+Returns true
+if successful.
+Project.setGraphicsWhiteLuminance()¶
+app.project.setGraphicsWhiteLuminance(value)
+Description¶
+Sets the current graphics white luminance value, for this project.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+value |
+Integer | The value to be used; must be a value provided by Project.getSupportedGraphicsWhiteLuminances(). |
+Returns¶
+Returns true
+if successful.
+Project.setProjectPanelMetadata()¶
+app.project.setProjectPanelMetadata(layout)
+Description¶
+Returns the current layout of the Project panel.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+layout |
+String | Represents the desired Project panel layout. Note: The only known method for generating a valid layout string, is setting the Project panel as desired then using Project.getProjectPanelMetadata(). |
+Returns¶
+Returns 0
+if unsuccessful.
+Project.setScratchDiskPath()¶
+app.project.setScratchDiskPath(newPath, whichScratchDiskPath)
+Description¶
+Changes the specified scratch disk path to a new path.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+A new path. |
+|
+|
+|
+One of:
+|
+Returns¶
+Returns 0
+if unsuccessful.
+ProjectManager object¶
+app.projectManager.options
+Description¶
+The ProjectManager object exposes Premiere Pro's Project Manager, for project consolidation, transfer and transcoding.
+Attributes¶
+ProjectManager.affectedSequences¶
+app.projectManager.options.affectedSequences
+Description¶
+An Array of Sequence objects, to be exported.
+Type¶
+Array; read/write.
+ProjectManager.clipTranscoderOption¶
+app.projectManager.options.clipTranscoderOption
+Description¶
+The specified setting for clip transcode. Value will be one of the following:
+CLIP_TRANSCODE_MATCH_PRESET
+- Transcode using the specified preset.CLIP_TRANSCODE_MATCH_CLIPS
+- Match the clipsCLIP_TRANSCODE_MATCH_SEQUENCE
+- Match the sequence
+Type¶
+String; read/write.
+ProjectManager.clipTransferOption¶
+app.projectManager.options.clipTransferOption
+Description¶
+The specified setting for clip transfer. Value will be one of the following:
+CLIP_TRANSFER_COPY
+- Copy entire source media.CLIP_TRANSFER_TRANSCODE
+- Transcode to default output format.
+ProjectManager.convertAECompsToClips¶
+app.projectManager.options.convertAECompsToClips
+Description¶
+If true, render dynamically-linked After Effects compositions to new media (using specified output preset).
+Type¶
+Boolean; read/write.
+ProjectManager.convertImageSequencesToClips¶
+app.projectManager.options.convertImageSequencesToClips
+Description¶
+If true, transcode image sequences to new media (using specified output preset).
+Type¶
+Boolean; read/write.
+ProjectManager.convertSyntheticsToClips¶
+app.projectManager.options.convertSyntheticsToClips
+Description¶
+If true, transcode clips from synthetic importers to new media (using specified output preset).
+Type¶
+Boolean; read/write.
+ProjectManager.copyToPreventAlphaLoss¶
+app.projectManager.options.copyToPreventAlphaLoss
+Description¶
+If true, includes any available alpha information into transcoded media.
+Type¶
+Boolean; read/write.
+ProjectManager.destinationPath¶
+app.projectManager.options.destinationPath
+Description¶
+The path to which to export the project and media.
+Type¶
+String; read/write.
+ProjectManager.encoderPresetFilePath¶
+app.projectManager.options.encoderPresetFilePath
+Description¶
+The path to the output preset (.epr file) to be used.
+Type¶
+String; read-write.
+ProjectManager.excludeUnused¶
+app.projectManager.options.excludeUnused
+Description¶
+If non-zero, exclude unused project items from the exported project.
+Type¶
+Boolean; read/write.
+ProjectManager.handleFrameCount¶
+app.projectManager.options.handleFrameCount
+Description¶
+How many frames of 'handle' footage (before and after the in and out points) of media, to include.
+Type¶
+Integer; read/write.
+ProjectManager.includeAllSequences¶
+app.projectManager.options.includeAllSequences
+Description¶
+If true, export all Sequences in the exported project.
+Type¶
+Boolean; read/write.
+ProjectManager.includeConformedAudio¶
+app.projectManager.options.includeConformedAudio
+Description¶
+If true, include conformed audio files with exported project.
+Type¶
+Boolean; read/write.
+ProjectManager.includePreviews¶
+app.projectManager.options.includePreviews
+Description¶
+If true, include rendered preview files with exported project.
+Type¶
+Boolean; read/write.
+ProjectManager.renameMedia¶
+app.projectManager.options.renameMedia
+Description¶
+If true, perform renaming as part of the export process.
+Type¶
+Boolean; read/write.
+Properties object¶
+app.properties
+Description¶
+add description here
+Attributes¶
+None.
+Methods¶
+Properties.clearProperty()¶
+app.properties.clearProperty()
+Description¶
+add description here
+Parameters¶
+add parameters here
+Returns¶
+add return value/type here
+Properties.doesPropertyExist()¶
+app.properties.doesPropertyExist(property)
+Description¶
+Checks whether a given property exists in preferences.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+property |
+String | A property to check |
+Returns¶
+Boolean.
+Example¶
+Check whether labels with indices 10 and 99 exist in preferences:
+var property = 'BE.Prefs.LabelNames.10';
+var exists = app.properties.doesPropertyExist(property);
+alert('Property "' + property + '" exists: ' + exists.toString());
+property = 'BE.Prefs.LabelNames.99';
+exists = app.properties.doesPropertyExist(property);
+alert('Property "' + property + '" exists: ' + exists.toString());
+Properties.getProperty()¶
+app.properties.getProperty(property)
+Description¶
+Returns a property value.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+property |
+String | A property to get a value for |
+Returns¶
+String.
+Example¶
+Get label name at a given index:
+var labelIndex = 0;
+var property = 'BE.Prefs.LabelNames.' + labelIndex;
+if (app.properties.doesPropertyExist(property)) {
+alert(app.properties.getProperty(property));
+} else {
+alert('Property "' + property + '" does not exist');
+}
+Properties.isPropertyReadOnly()¶
+app.properties.isPropertyReadOnly(property)
+Description¶
+Checks whether a given property can be overwritten by the user. Returns false
+if such property does not exist.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+property |
+String | A property to check. |
+Returns¶
+Boolean.
+Properties.setProperty()¶
+app.properties.setProperty(property, value, persistent, createIfNotExist)
+Description¶
+Set property value.
+Note
+For any file paths to be used in Premiere Pro's preferences, a trailing path seperator is mandatory.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+property |
+String | A property to create |
+value |
+Any | A value for a property |
+persistent |
+Boolean | Whether if should be persistent between sessions |
+createIfNotExist |
+Boolean | Should create, if such property does not exist |
+Returns¶
+null
+Example¶
+Change label name:
+var labelIndex = 0;
+var property = 'BE.Prefs.LabelNamesX.' + labelIndex;
+var newValue = 'Changed via Script';
+var persistent = true;
+var createIfNotExist = true;
+if (app.properties.doesPropertyExist(property)) {
+if (app.properties.isPropertyReadOnly(property)) {
+alert('Could not rename property "' + property + '" because it is read-only.');
+} else {
+var oldValue = app.properties.getProperty(property);
+app.properties.setProperty(property, newValue, persistent, createIfNotExist);
+alert('Value changed from "' + oldValue + '" to "' + newValue + '"');
+}
+} else {
+app.properties.setProperty(property, newValue, persistent, createIfNotExist);
+alert('Created new property "' + property + '" with value "' + newValue + '"');
+}
+SourceMonitor object¶
+app.sourceMonitor
+Description¶
+The Source object represents Premiere Pro's Source monitor.
+Attributes¶
+None.
+Methods¶
+SourceMonitor.closeAllClips()¶
+app.sourceMonitor.closeAllClips()
+Description¶
+Closes all clips in the Source monitor.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+SourceMonitor.closeClip()¶
+app.sourceMonitor.closeClip()
+Description¶
+Closes the front-most clip in the Source monitor.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if successful.
+SourceMonitor.getPosition()¶
+app.sourceMonitor.getPosition()
+Description¶
+Retrieves the position of the Source monitor's current time indicator.
+Parameters¶
+None.
+Returns¶
+Returns a Time object containing the position of the Source monitor's current time indicator.
+SourceMonitor.getProjectItem()¶
+app.sourceMonitor.getProjectItem()
+Description¶
+Retrieves the project item corresponding to the media open in the Source monitor.
+Parameters¶
+None.
+Returns¶
+Returns projectItem if successful; null if not.
+SourceMonitor.openFilePath()¶
+app.sourceMonitor.openFilePath(path)
+Description¶
+Open a file in the Source monitor.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | A path to the file to open. |
+Returns¶
+Returns true
+if successful.
+SourceMonitor.openProjectItem()¶
+app.sourceMonitor.openProjectItem(projectItem)
+Description¶
+Open a project item in the Source monitor.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectItem |
+ProjectItem object | A project item to open. |
+Returns¶
+Returns 0
+if successful.
+SourceMonitor.play()¶
+app.sourceMonitor.play(playbackSpeed)
+Description¶
+Begins playing back the Source monitor, at the specified playback speed.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+playbackSpeed |
+Float | The playback speed. |
+Returns¶
+Returns 0
+if successful.
+Item
+ProjectItem object¶
+app.project.rootItem.children[index]
+Description¶
+Each item in a project is a ProjectItem, including the project root.
+Attributes¶
+ProjectItem.children¶
+app.project.rootItem.children[index].children
+Description¶
+An array of project items, contained within the specified project item.
+Type¶
+ProjectItemCollection object, read-only.
+ProjectItem.getAudioChannelMapping¶
+app.project.rootItem.children[index].getAudioChannelMapping
+Description¶
+The audio channel mapping currently applied to this ProjectItem.
+Type¶
+An audioChannelMapping object.
+ProjectItem.getOverrideColorSpaceList¶
+app.project.rootItem.children[index].getOverrideColorSpaceList
+Description¶
+Add a description
+Returns an object, containing similar data
+{
+value: [
+sRGB,
+BT.601 (NTSC),
+BT.601 (PAL),
+BT.709,
+BT.709 (Scene),
+BT.2020,
+BT.2020 (Scene),
+BT.2100 PQ,
+BT.2100 PQ (Scene),
+BT.2100 HLG,
+BT.2100 HLG (Scene),
+DCDM XYZ,
+]
+};
+Type¶
+Javascript Object.
+ProjectItem.name¶
+app.project.rootItem.children[index].name
+Description¶
+The name of the project item.
+Type¶
+String; read/write.
+Example¶
+Rename first project item.
+var item = app.project.rootItem.children[0];
+if (item) {
+item.name = item.name + ', updated by PProPanel.';
+} else {
+alert('Could not rename project item');
+}
+ProjectItem.nodeId¶
+app.project.rootItem.children[index].nodeId
+Description¶
+A unique ID assigned to the project item, upon its addition to the project.
+Note
+Distinguish between references to the same source media.
+Type¶
+String; read-only.
+ProjectItem.teamProjectsAssetId¶
+app.project.rootItem.children[index].teamProjectsAssetId
+Description¶
+The Team Projects Asset ID of the project item.
+Type¶
+String; read-only.
+ProjectItem.treePath¶
+app.project.rootItem.children[index].treePath
+Description¶
+The current project location of the project item.
+Example: \\ProjectName.prproj\\Media\\MXF\\filename.mxf
+Type¶
+String; read-only.
+ProjectItem.type¶
+app.project.rootItem.children[index].type
+Description¶
+One of:
+"CLIP"
+"BIN"
+"ROOT"
+"FILE"
+Type¶
+Enumerated value; read-only.
+Methods¶
+ProjectItem.attachProxy()¶
+app.project.rootItem.children[index].attachProxy(mediaPath, isHiRes)
+Description¶
+Attaches the media at newMediaPath
+to the project item, as either hi-res or proxy media.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+mediaPath |
+String | The path to the the newly-assigned media. |
+isHiRes |
+Integer | Whether the new media should be attached as the proxy 0 , or high resolution 1 media. |
+Returns¶
+Returns 0
+if successful.
+ProjectItem.canChangeMediaPath()¶
+app.project.rootItem.children[index].canChangeMediaPath()
+Description¶
+Returns true
+if Premiere Pro can change the path, associated with this project item; otherwise, returns false
+.
+Parameters¶
+None.
+Returns¶
+Boolean; true
+if media can be replaced, false
+if not.
+ProjectItem.canProxy()¶
+app.project.rootItem.children[index].canProxy()
+Description¶
+Indicates whether it's possible to attach a proxy, to this project item.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the project item permits a proxy to be attached; false
+if not.
+ProjectItem.changeMediaPath()¶
+app.project.rootItem.children[index].changeMediaPath(newPath)
+Description¶
+Updates the project item to point to a new media path.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newPath |
+String | A new path to the media file. |
+overrideChecks |
+Boolean | Override any safety concerns. |
+Returns¶
+Returns 0
+if replacement was successful.
+ProjectItem.clearOutPoint()¶
+app.project.rootItem.children[index].clearOutPoint()
+Description¶
+Clears any assigned out point; the project item will then start at startTime
+.
+Parameters¶
+None
+Returns¶
+Returns 0
+if successful.
+ProjectItem.createBin()¶
+app.project.rootItem.children[index].createBin(name)
+Description¶
+Creates an empty bin, within the project item. Only works within bins.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+name |
+String | A name of a new bin. |
+Returns¶
+Returns a project item representing the new bin if successful, or 0
+if unsuccessful.
+ProjectItem.createSmartBin()¶
+app.project.rootItem.children[index].createSmartBin(name, queryString)
+Description¶
+Creates a search bin; only works for bin project items.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+name |
+String | A name of a new bin. |
+queryString |
+String | Query string for search. |
+Returns¶
+Returns a projectItem representing the newly-created bin, if successful.
+ProjectItem.createSubClip()¶
+app.project.rootItem.children[index].createSubClip(name, startTime, endTime, hasHardBoundaries, takeAudio, takeVideo)
+Description¶
+Creates a new project item for a sub-clip of the existing project item.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+name |
+String | A name of a new subclip. |
+startTime |
+String | Start time of subclip, in ticks. |
+endTime |
+String | End time of subclip, in ticks. |
+hasHardBoundaries |
+Integer | If 1 , the user cannot extend in and out. |
+takeVideo |
+Integer | If 1 , use video from source. |
+takeAudio |
+Integer | If 1 , use audio from source. |
+Returns¶
+Returns a project item representing the new subclip, or 0 if creation failed.
+ProjectItem.deleteBin()¶
+app.project.rootItem.children[index].deleteBin()
+Description¶
+Deletes a bin and all its contents from the project.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if deletion was successful.
+ProjectItem.findItemsMatchingMediaPath()¶
+app.project.rootItem.children[index].findItemsMatchingMediaPath(pathToMatch, ignoreSubClips)
+Description¶
+Returns an array of project items, all of which reference the same media path.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+pathToMatch |
+String | A path to match. |
+ignoreSubClips |
+Integer | If 1 , no subclips will be returned. |
+Returns¶
+Returns an array of project items, or 0
+if no project items matching the matchPath
+were found.
+ProjectItem.getColorLabel()¶
+app.project.rootItem.children[index].getColorLabel()
+Description¶
+Retrieves the project item's color label.
+Parameters¶
+None.
+Returns¶
+Integer, one of:
+0
+= Violet1
+= Iris2
+= Caribbean3
+= Lavender4
+= Cerulean5
+= Forest6
+= Rose7
+= Mango8
+= Purple9
+= Blue10
+= Teal11
+= Magenta12
+= Tan13
+= Green14
+= Brown15
+= Yellow
+ProjectItem.getColorSpace()¶
+app.project.rootItem.children[index].getColorSpace()
+Description¶
+Retrieves the project item's colorspace properties.
+Parameters¶
+None.
+Returns¶
+Returns an item's colorspace properties, an object consisting of:
+name
+transferCharacteristic
+primaries
+matrixEquation
+Example¶
+this will write the above info to the Events panel.
+var colorSpace = app.project.rootItem.children[0].getColorSpace()
+app.setSDKEventMessage("Color Space " + " = " + colorSpace.name, 'info');
+app.setSDKEventMessage("Transfer Characteristic " + " = " + colorSpace.transferCharacteristic, 'info');
+app.setSDKEventMessage("Color Primaries " + " = " + colorSpace.primaries, 'info');
+app.setSDKEventMessage("Matrix Equation " + " = " + colorSpace.matrixEquation, 'info');
+ProjectItem.getOriginalColorSpace()¶
+app.project.rootItem.children[index].getOriginalColorSpace()
+Description¶
+Retrieves the project item's colorspace properties .
+Parameters¶
+None.
+Returns¶
+Returns an item's colorspace properties, an object consisting of:
+name
+transferCharacteristic
+primaries
+matrixEquation
+Example¶
+See ProjectItem.getColorSpace()
+ProjectItem.getEmbeddedLUTID()¶
+app.project.rootItem.children[index].getEmbeddedLUTID()
+Description¶
+Retrieves the project item's LUTID .
+Parameters¶
+None.
+Returns¶
+Returns an item's LUTID
+Example¶
+Writes LUTID to Events panel.
+var lutID = app.project.rootItem.children[0].getEmbeddedLUTID()
+app.setSDKEventMessage("LutID " + " = " + lutID, 'info');
+ProjectItem.getInputLUTID()¶
+app.project.rootItem.children[index].getInputLUTID()
+Description¶
+Retrieves the project item's Input LUTID .
+Parameters¶
+None.
+Returns¶
+Returns an item's Input LUTID
+Example¶
+Writes Input LUTID to Events panel.
+var lutID = app.project.rootItem.children[0].getInputLUTID()
+app.setSDKEventMessage("Input LutID " + " = " + inputLutID, 'info');
+ProjectItem.getFootageInterpretation()¶
+app.project.rootItem.children[index].getFootageInterpretation()
+Description¶
+Returns a structure describing the current interpretation of the projectItem.
+Parameters¶
+None.
+Returns¶
+A footage interpretation structure, or 0
+if unsuccessful.
+|
+Property |
+Type |
+Description |
+|---|---|---|
+|
+|
+Integer |
+Alpha, will be one of:
+|
+|
+|
+Integer |
+Field type, one of:
+|
+|
+|
+Boolean |
+|
+|
+|
+Boolean |
+|
+|
+|
+Float |
+Frame rate as floating point value. |
+|
+|
+Float |
+Pixel aspect ratio as floating point value. |
+|
+|
+Boolean |
+|
+|
+|
+Integer |
+The projection type in use, for VR footage. One of
+|
+|
+|
+Integer |
+The layout of footage in use, for VR. One of
+|
+|
+|
+String |
+The horizontal view in use, for VR footage. |
+|
+|
+String |
+The vertical view in use, for VR footage. |
+ProjectItem.getInPoint()¶
+app.project.rootItem.children[index].getInPoint()
+Description¶
+Obtains the current project item in point.
+Parameters¶
+None.
+Returns¶
+A Time object, containing the in point.
+ProjectItem.getMarkers()¶
+app.project.rootItem.children[index].getMarkers()
+Description¶
+Retrieves the MarkerCollection object associated with this project item.
+Parameters¶
+None.
+Returns¶
+MarkerCollection object, read-only;
+ProjectItem.getMediaPath()¶
+app.project.rootItem.children[index].getMediaPath()
+Description¶
+Returns the path associated with the project item's media, as a String.
+Note
+This only works for atomic media; this call cannot provide meaningful paths for media which has no actual path (which will be the case for any media generated by synthetic importers, like Premiere Pro's own Universal Counting Leader).
+Also, for image sequences, only the path to the first image in the sequence will be returned.
+Parameters¶
+None.
+Returns¶
+A String containing the path to the media associate with the project item.
+ProjectItem.getOutPoint()¶
+app.project.rootItem.children[index].getOutPoint(mediaType)
+Description¶
+Retrieves the current out point for specified media type.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+Integer |
+Pass If no |
+Returns¶
+Returns a Time object.
+ProjectItem.getProjectMetadata()¶
+app.project.rootItem.children[index].getProjectMetadata()
+Description¶
+Retrieves metadata associated with the project item. Distinct from media XMP.
+Parameters¶
+None.
+Returns¶
+A String containing all Premiere Pro private project metadata, serialized.
+ProjectItem.getProjectColumnsMetadata()¶
+app.project.rootItem.children[index].getProjectColumnsMetadata()
+Description¶
+Returns a JSON string to the user with all the metadata from the current project view layout
+Parameters¶
+None.
+Returns¶
+A JSON string that can be parsed with JSON.parse() method in the Javascript layer.
+This generates a list of objects, each object representing a column. Each object will contain 4 key/value pairs: ColumnName
+, ColumnValue
+, ColumnID
+, ColumnPath
+.
+ColumnName
+andColumnValue
+serve as informational key/value.ColumnID
+andColumnPath
+can be used to modify that column via the method setProjectMetadata() or setXMPMetadata().
+For example:
+| Key | Value | Description |
+|---|---|---|
+ColumnName |
+"Name" |
+Name of the column |
+ColumnValue |
+"A014C003_180620_R205.mov" |
+Example of colummn value |
+ColumnID |
+"Column.Intrinsic.Name" |
+ID of the colummn |
+ColumnPath |
+"http://ns.adobe.com/premierePrivateProjectMetaData/1.0/" |
+Path of the column |
+ProjectItem.getProxyPath()¶
+app.project.rootItem.children[index].getProxyPath()
+Description¶
+Retrieves the path to the proxy media associated with this project item.
+Parameters¶
+None.
+Returns¶
+Returns the path (as String) to the proxy media associated with the proxy item, or 0
+if none is found.
+ProjectItem.getXMPMetadata()¶
+app.project.rootItem.children[index].getXMPMetadata()
+Description¶
+Retrieves the XMP metadata associated with the project item, as a String.
+Parameters¶
+None.
+Returns¶
+A String containing all XMP metadata, serialized.
+ProjectItem.hasProxy()¶
+app.project.rootItem.children[index].hasProxy()
+Description¶
+Indicates whether a proxy has already been attached, to the project item.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the project item has a proxy attached; false
+if not.
+ProjectItem.isMergedClip()¶
+app.project.rootItem.children[index].isMergedClip()
+Description¶
+Indicates whether the project item refers to a merged clip.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the project item is a merged clip, false
+if it isn't.
+ProjectItem.isMulticamClip()¶
+app.project.rootItem.children[index].isMulticamClip()
+Description¶
+Indicates whether the project item refers to a multicam clip.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the project item is a multicam clip, false
+if it isn't.
+ProjectItem.isOffline()¶
+app.project.rootItem.children[index].isOffline()
+Description¶
+Returns a Boolean indicating whether the project item is offline.
+Parameters¶
+None.
+Returns¶
+Boolean, true
+if offline.
+ProjectItem.isSequence()¶
+app.project.rootItem.children[index].isSequence()
+Description¶
+Indicates whether the project item refers to a Sequence object.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the project item is a Sequence object, or a multicam clip, or a merged clip. Returns false
+if it isn't any of those.
+ProjectItem.moveBin()¶
+app.project.rootItem.children[index].moveBin(newParentBinProjectItem)
+Description¶
+Moves the projectItem into a new parent bin.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if move was successful.
+ProjectItem.refreshMedia()¶
+app.project.rootItem.children[index].refreshMedia()
+Description¶
+Forces Premiere Pro to update its representation of the media associated with the project item. If the media was previously off-line, this can cause it to become online (if previously missing media has become available).
+Parameters¶
+None.
+Returns¶
+An array of markers associated with the project item, or 0
+if there are no markers.
+ProjectItem.renameBin()¶
+app.project.rootItem.children[index].renameBin(newName)
+Description¶
+Changes name of bin. Only works on project items which are bins.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newName |
+String | A new bin name. |
+Returns¶
+Returns 0
+if renaming bin was successful.
+ProjectItem.select()¶
+app.project.rootItem.children[index].select()
+Description¶
+Sets the project item (which must be a bin), as the target for subsequent imports into the project.
+Parameters¶
+None.
+Returns¶
+Returns 0
+if the project item has successfully been made the target, for subsequent imports.
+ProjectItem.setColorLabel()¶
+app.project.rootItem.children[index].setColorLabel(labelColor)
+Description¶
+Sets the project item's color label.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+labelColor |
+Integer | A label color; see ProjectItem.getColorLabel(). |
+Returns¶
+0
+if successful.
+ProjectItem.setFootageInterpretation()¶
+app.project.rootItem.children[index].setFootageInterpretation(interpretation)
+Description¶
+Returns a structure describing the current interpretation of the projectItem.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+interpretation |
+A footage interpretation structure. |
+Returns¶
+true
+if successful.
+ProjectItem.setInPoint()¶
+app.project.rootItem.children[index].setInPoint(time, mediaType)
+Description¶
+Sets the in point to timeInTicks
+, for specified media types.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+String | A time in ticks. |
+mediaType |
+Integer | Determining which media type to affect; pass 1 for video only, 2 for audio only, or 4 for all media types. |
+Returns¶
+Returns 0
+if successful.
+ProjectItem.setOffline()¶
+app.project.rootItem.children[index].setOffline()
+Description¶
+Makes the project item offline.
+Parameters¶
+None.
+Returns¶
+true
+if successful.
+ProjectItem.setOutPoint()¶
+app.project.rootItem.children[index].setOutPoint(time, mediaType)
+Description¶
+Sets the out point to timeInTicks
+, for specified media types.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+String | A time in ticks. |
+mediaType |
+Integer | Determining which media type to affect; pass 1 for video only, 2 for audio only, or 4 for all media types. |
+Returns¶
+Returns 0
+if successful.
+ProjectItem.setOverrideFrameRate()¶
+app.project.rootItem.children[index].setOverrideFrameRate(newFrameRate)
+Description¶
+Sets the frame rate of the project item.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newFrameRate |
+Float | The new frame rate. |
+Returns¶
+Returns 0
+if the frame rate has successfully been changed.
+ProjectItem.setOverridePixelAspectRatio()¶
+app.project.rootItem.children[index].setOverridePixelAspectRatio(numerator, denominator)
+Description¶
+Sets the pixel aspect ratio for the project item.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+numerator |
+Integer | A new numerator. |
+denominator |
+Integer | A new denominator. |
+Returns¶
+Returns 0
+if the aspect ratio has successfully been changed.
+ProjectItem.setProjectMetadata()¶
+app.project.rootItem.children[index].setProjectMetadata(newMetadata, updatedFields)
+Description¶
+Sets the private project metadata associated with the project item.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newMetadata |
+String | A new, serialized private project metadata. |
+updatedFields |
+Array of strings | An array containing the names of the fields to be updated. |
+Returns¶
+Returns 0
+if update was successful.
+ProjectItem.setScaleToFrameSize()¶
+app.project.rootItem.children[index].setScaleToFrameSize()
+Description¶
+Turns on scaling to frame size, for when media from this project item is inserted into a sequence.
+Parameters¶
+None.
+Returns¶
+Undefined return value.
+ProjectItem.setStartTime()¶
+app.project.rootItem.children[index].setStartTime(time)
+Description¶
+Assigns a new start time to the project item
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+String | A new starting time, represented in ticks. |
+Returns¶
+Returns 0
+if successful.
+ProjectItem.setXMPMetadata()¶
+app.project.rootItem.children[index].setXMPMetadata(newXMP)
+Description¶
+Sets the XMP metadata associated with the project item.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newXMP |
+String | A new, serialized XMP metadata. |
+Returns¶
+Returns 0
+if update was successful.
+ProjectItem.startTime()¶
+app.project.rootItem.children[index].startTime()
+Description¶
+Returns a Time object, representing start time.
+Parameters¶
+None.
+Returns¶
+ProjectItem.videoComponents()¶
+app.project.rootItem.children[index].videoComponents()
+Description¶
+Video components for the 'Master Clip' of this project item.
+Type¶
+ComponentCollection object, read-only.
+TrackItem object¶
+app.project.sequences[index].audioTracks[index].clips[index]
+app.project.sequences[index].videoTracks[index].clips[index]
+Description¶
+The TrackItem object represents an item on a video or audio track, within a Sequence object.
+Attributes¶
+TrackItem.components¶
+app.project.sequences[index].audioTracks[index].clips[index].components
+app.project.sequences[index].videoTracks[index].clips[index].components
+Description¶
+The components associated with this trackItem. This can include intrinsic transformations, as well as video and audio effects.
+Type¶
+ComponentCollection object, read-only;
+TrackItem.duration¶
+app.project.sequences[index].audioTracks[index].clips[index].duration
+app.project.sequences[index].videoTracks[index].clips[index].duration
+Description¶
+The duration of the trackItem.
+Type¶
+Time object, read-only.
+TrackItem.end¶
+app.project.sequences[index].audioTracks[index].clips[index].end
+app.project.sequences[index].videoTracks[index].clips[index].end
+Description¶
+The visible end time of the trackItem in the sequence, relative to the beginning of its corresponding sequence (NOT the sequence zero point).
+Note
+This may differ from the trackItem's out point, which is relative to the source.
+Type¶
+Time object, read/write.
+TrackItem.inPoint¶
+app.project.sequences[index].audioTracks[index].clips[index].inPoint
+app.project.sequences[index].videoTracks[index].clips[index].inPoint
+Description¶
+The in point set on the source for this trackItem instance, relative to the beginning of the source.
+Type¶
+Time object, read/write.
+TrackItem.matchName¶
+app.project.sequences[index].audioTracks[index].clips[index].matchName
+app.project.sequences[index].videoTracks[index].clips[index].matchName
+Description¶
+Add a description
+Type¶
+String; read-only.
+TrackItem.mediaType¶
+app.project.sequences[index].audioTracks[index].clips[index].mediaType
+app.project.sequences[index].videoTracks[index].clips[index].mediaType
+Description¶
+The mediaType of media provided by this trackItem.
+Type¶
+String, one of:
+"Audio"
+"Video"
+TrackItem.name¶
+app.project.sequences[index].audioTracks[index].clips[index].name
+app.project.sequences[index].videoTracks[index].clips[index].name
+Description¶
+The name of the track item.
+Type¶
+String; read/write.
+TrackItem.nodeId¶
+app.project.sequences[index].audioTracks[index].clips[index].nodeId
+app.project.sequences[index].videoTracks[index].clips[index].nodeId
+Description¶
+Add a description
+Type¶
+String.
+TrackItem.outPoint¶
+app.project.sequences[index].audioTracks[index].clips[index].outPoint
+app.project.sequences[index].videoTracks[index].clips[index].outPoint
+Description¶
+The out point set on the source for this TrackItem instance, relative to the beginning of the source.
+Type¶
+Time object, read/write.
+TrackItem.projectItem¶
+app.project.sequences[index].audioTracks[index].clips[index].projectItem
+app.project.sequences[index].videoTracks[index].clips[index].projectItem
+Description¶
+The ProjectItem object from which the media is being drawn.
+Type¶
+TrackItem.start¶
+app.project.sequences[index].audioTracks[index].clips[index].start
+app.project.sequences[index].videoTracks[index].clips[index].start
+Description¶
+The visible start time of the trackItem in the sequence, relative to the beginning of its corresponding sequence (NOT the sequence zero point). Note: This may differ from the trackItem's in point, which is relative to the source.
+Type¶
+Time object, read/write.
+TrackItem.type¶
+app.project.sequences[index].audioTracks[index].clips[index].type
+app.project.sequences[index].videoTracks[index].clips[index].type
+Description¶
+The type of media provided by this trackItem.
+Type¶
+Number, 1
+means video, 2
+means audio.
+Methods¶
+TrackItem.getMGTComponent()¶
+app.project.sequences[index].videotracks[index].getMGTComponent
+app.project.sequences[index].audiotracks[index].getMGTComponent
+Description¶
+Adds an After Effects Motion Graphics Template - a Mogrt - to the selected track at the specified time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+mogrtPath |
+String | Full path to a valid .mogrt, created in After Effects |
+targetTime |
+String | The time at which to insert the .mogrt, in ticks |
+vidTrackOffset |
+Integer | The offset from 0 (the first available track), on which to insert video from the .mogrt |
+audTrackOffset |
+Integer | The offset from 0 (the first available track), on which to insert audio from the .mogrt |
+Returns¶
+A Component object representing the parameters of the .mogrt, which the creator has exposed.
+TrackItem.getSpeed()¶
+app.project.sequences[index].audioTracks[index].clips[index].getSpeed()
+app.project.sequences[index].videoTracks[index].clips[index].getSpeed()
+Description¶
+Returns the speed multiplier applied to the TrackItem.
+Parameters¶
+None.
+Returns¶
+Returns the speed multiplier applied to the TrackItem, as a Float. No speed adjustment = 1
+.
+TrackItem.isAdjustmentLayer()¶
+app.project.sequences[index].audioTracks[index].clips[index].isAdjustmentLayer()
+app.project.sequences[index].videoTracks[index].clips[index].isAdjustmentLayer()
+Description¶
+Returns wheter the TrackItem is an adjustment layer.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the trackitem is an adjustment layer; false
+if not.
+TrackItem.isSpeedReversed()mm¶
+app.project.sequences[index].audioTracks[index].clips[index].isSpeedReversed()
+app.project.sequences[index].videoTracks[index].clips[index].isSpeedReversed()
+Description¶
+Returns whether the trackItem is reversed.
+Parameters¶
+None.
+Returns¶
+Returns 1
+if TrackItem is reversed; 0
+if not.
+TrackItem.isSelected()¶
+app.project.sequences[index].audioTracks[index].clips[index].isSelected()
+app.project.sequences[index].videoTracks[index].clips[index].isSelected()
+Description¶
+Retrieves the current selection state of the trackItem.
+Parameters¶
+None.
+Returns¶
+Returns true
+if trackItem is selected; false
+if not.
+TrackItem.setSelected()¶
+app.project.sequences[index].audioTracks[index].clips[index].setSelected(state, updateUI)
+app.project.sequences[index].videoTracks[index].clips[index].setSelected(state, updateUI)
+Description¶
+Sets the selection state of the trackItem.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+state |
+Integer | If 1 , the track item will be selected; if 0 , it will be deselected. |
+updateUI |
+Integer | If 1 , the Premiere Pro UI will be updated after this function call is made. |
+Returns¶
+Returns 0
+if successful.
+TrackItem.getMatchName()¶
+app.project.sequences[index].audioTracks[index].clips[index].getMatchName()
+app.project.sequences[index].videoTracks[index].clips[index].getMatchName()
+Description¶
+Retrieves the match name for the trackItem.
+Parameters¶
+None.
+Returns¶
+Returns the match name as a String if successful.
+TrackItem.remove()¶
+app.project.sequences[index].audioTracks[index].clips[index].remove(inRipple, inAlignToVideo)
+app.project.sequences[index].videoTracks[index].clips[index].remove(inRipple, inAlignToVideo)
+Description¶
+Sets the selection state of the trackItem.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+inRipple |
+Boolean | If 1 , later track items will be moved earlier, to fill the gap; if 0 , later track items will remain in place. |
+inAlignToVideo |
+Boolean | If 1 , Premiere Pro will align moved track items to the start of the nearest video frame. |
+Returns¶
+Returns 0
+if successful.
+TrackItem.disabled¶
+app.project.sequences[index].audioTracks[index].clips[index].disabled
+app.project.sequences[index].videoTracks[index].clips[index].disabled
+Description¶
+Sets the disabled state of the TrackItem. Read/Write.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newDisableState |
+Boolean | If true , this TrackItem will be disabled; if false , TrackItem will be enabled. |
+Returns¶
+Returns 0
+if successful.
+TrackItem.move()¶
+app.project.sequences[index].audioTracks[index].clips[index].move(newInPoint)
+app.project.sequences[index].videoTracks[index].clips[index].move(newInPoint)
+Description¶
+Moves the inPoint of the track item to a new time, by shifting it by a number of seconds.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newInPoint |
+Time object | A Time object that represent the amount of time, in seconds, to shift the track item's start. |
+Returns¶
+Returns 0
+if successful.
+Sequence
+Component object¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index]
+app.project.sequences[index].videoTracks[index].clips[index].components[index]
+Description¶
+The Component object represents something which has been added or applied to a trackItem.
+Attributes¶
+Component.displayName¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].displayName
+app.project.sequences[index].videoTracks[index].clips[index].components[index].displayName
+Description¶
+The name of the component, as it is displayed to the user. Localized.
+Type¶
+String; read-only.
+Component.matchName¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].matchName
+app.project.sequences[index].videoTracks[index].clips[index].components[index].matchName
+Description¶
+The name of the component, as it is loaded from disk; used to uniquely identify effect plug-ins.
+Type¶
+String; read-only.
+Component.properties¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties
+Description¶
+The properties of the component in question; typically, these are effect parameters.
+Type¶
+Array of components, read-only; (ComponentParamCollection object).
+ComponentParam object¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index]
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index]
+Description¶
+The ComponentParam object represents a parameter associated with a component, applied to a TrackItem object.
+Note
+For a developer working across different localizations, it's possible to find the corresponding keys by comparing ZStrings.
+Below is an example between En and De. Here are the paths to the files:
+C:\Program Files\Adobe\Adobe Premiere Pro 2024\Dictionaries\de_DE\zdictionary_PPRO_de_DE.dat
+- ("…anti-Flimmer Filter")
+C:\Program Files\Adobe\Adobe Premiere Pro 2024\Dictionaries\en_DE\zdictionary_PPRO_en_US.dat
+- ("…anti-flicker Filter")
+Attributes¶
+ComponentParam.displayName¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].displayName
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].displayName
+Description¶
+The name of the component parameter, as it is displayed to the user. Localized.
+Type¶
+String; read-only.
+Methods¶
+ComponentParam.addKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].addKey(time)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].addKey(time)
+Description¶
+Adds a keyframe to the component parameter stream, at the specified time. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Time object | When the keyframe should be added. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.areKeyframesSupported()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].areKeyframesSupported()
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].areKeyframesSupported()
+Description¶
+Retrieves whether keyframes are supported, for this component parameter.
+Parameters¶
+None.
+Returns¶
+Returns true
+if keyframes are supported; false
+if not.
+ComponentParam.findNearestKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].findNearestKey(timeToCheck, threshold)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].findNearestKey(timeToCheck, threshold)
+Description¶
+Sets whether the component parameter varies, over time. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+timeToCheck |
+Start search from a given time | |
+threshold |
+Integer | A temporal distance, in either direction, in ticks. |
+Returns¶
+Returns a Time value, indicating when the closest keyframe is.
+ComponentParam.findNextKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].findNextKey(timeToCheck)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].findNextKey(timeToCheck)
+Description¶
+Returns the keyframe temporally subsequent to the provided timeToCheck
+. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+timeToCheck |
+Start search from a given time. |
+Returns¶
+Returns a Time value, indicating when the closest keyframe is, or 0
+if there is no available subsequent keyframe.
+ComponentParam.findPreviousKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].findPreviousKey(timeToCheck)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].findPreviousKey(timeToCheck)
+Description¶
+Returns the keyframe temporally previous to the provided timeToCheck
+. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+timeToCheck |
+Start search from a given time. |
+Returns¶
+Returns a Time value, indicating when the closest keyframe is, or 0
+if there is no available previous keyframe.
+ComponentParam.getColorValue()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].getColorValue()
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].getColorValue()
+Description¶
+Obtains the value of the component parameter stream. Note: This can only work on parameters which are not time-variant.
+Parameters¶
+None.
+Returns¶
+Returns a Color containing the values found in the component parameter stream, or 0
+if unsuccessful.
+ComponentParam.getKeys()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].getKeys()
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].getKeys()
+Description¶
+Returns an array of all keyframes on the timeToCheck
+component parameter. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+None.
+Returns¶
+Returns an array of Time values, indicating at what time each keyframe occurs, or 0
+if no keyframes are available.
+ComponentParam.getValue()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].getValue()
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].getValue()
+Description¶
+Obtains the value of the component parameter stream. Note: This can only work on parameters which are not time-variant.
+Parameters¶
+None.
+Returns¶
+Returns the value of the component parameter stream; the return varies with stream type.
+ComponentParam.getValueAtKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].getValueAtKey(time)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].getValueAtKey(time)
+Description¶
+Retrieves the value of the component parameter stream, at the specified keyframe time. Note: Can only be used with keyframeable parameter streams.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Time object | A time from which the keyframe value should be retrieved. |
+Returns¶
+Returns the value of the component parameter stream at time
+, or 0
+if unsuccessful.
+ComponentParam.getValueAtTime()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].getValueAtTime(time)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].getValueAtTime(time)
+Description¶
+Retrieves the value of the component parameter stream, at the specified time. If the value is between two keyframes then interpolation takes place.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Time object | A time from which the keyframe value should be retrieved. |
+Returns¶
+Returns the value of the component parameter stream at time
+, or 0
+if unsuccessful.
+ComponentParam.isTimeVarying()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].isTimeVarying()
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].isTimeVarying()
+Description¶
+Retrieves whether the component parameter varies, over time.
+Parameters¶
+None.
+Returns¶
+Returns true
+if the parameter varies over time; false
+if not.
+ComponentParam.removeKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].removeKey(time)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].removeKey(time)
+Description¶
+Removes a keyframe on the component parameter stream, at the specified time. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Time object | A time value, indicating when the keyframe should be removed. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.removeKeyRange()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].removeKeyRange(startTime, endTime)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].removeKeyRange(startTime, endTime)
+Description¶
+Removes all keyframes from the component parameter stream, between the specified times. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+startTime |
+Time object | The times (inclusive) to begin the removal of keyframes. |
+endTime |
+Time object | The times to end the removal of keyframes. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.setColorValue()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].setColorValue(alpha, red, green, blue, updateUI)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].setColorValue(alpha, red, green, blue, updateUI)
+Description¶
+Sets the values within a component parameter stream, representing a Color.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+alpha |
+Integer | Alpha value. |
+red |
+Integer | Red value. |
+green |
+Integer | Green value. |
+blue |
+Integer | Blue value. |
+updateUI |
+Integer | If 1 , will force Premiere Pro to update UI, after updating the value of the stream. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.setInterpolationTypeAtKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].setInterpolationTypeAtKey(time, interpretationType, [updateUI])
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].setInterpolationTypeAtKey(time, interpretationType, [updateUI])
+Description¶
+Specifies the interpolation type to be assigned to the keyframe, at the specified time. Note: It Can only be used with keyframeable parameter streams.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+A time of keyframe to modify. |
+|
+|
+|
+Interpolation Type Enum |
+One of:
+|
+|
+|
+Boolean |
+Whether to update UI afterward. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.setTimeVarying()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].setTimeVarying(varying)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].setTimeVarying(varying)
+Description¶
+Sets whether the component parameter varies, over time. Note: This can only be set on parameters which support keyframing.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+varying |
+Boolean | If true , component parameter will vary over time; if false , it won't. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.setValue()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].setValue(value, updateUI)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].setValue(value, updateUI)
+Description¶
+Sets the value of the component parameter stream. Note: This can only work on parameters which are not time-variant.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+value |
+Must be of the appropriate type for the component parameter stream. | |
+updateUI |
+Integer | If 1 , will force Premiere Pro to update UI, after updating the value of the stream. |
+Returns¶
+Returns 0
+if successful.
+ComponentParam.setValueAtKey()¶
+app.project.sequences[index].audioTracks[index].clips[index].components[index].properties[index].setValueAtKey(time, value, updateUI)
+app.project.sequences[index].videoTracks[index].clips[index].components[index].properties[index].setValueAtKey(time, value, updateUI)
+Description¶
+Sets the value of the component parameter stream, at the specified keyframe time. Note: Can only be used with keyframeable parameter streams.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Time object | A time at which the keyframe value should be set. |
+value |
+A value to be set. | |
+updateUI |
+Integer | If 1 , will force Premiere Pro to update UI, after updating the value of the stream. |
+Returns¶
+Returns 0
+if successful.
+Sequence object¶
+app.project.sequences[index]
+Description¶
+The Sequence object represents sequences of media, or 'timelines', in Premiere Pro.
+Attributes¶
+Sequence.audioDisplayFormat¶
+app.project.sequences[index].audioDisplayFormat
+Description¶
+The audio display format of the sequence.
+Set this attribute with the Sequence.setSettings() method.
+Type¶
+An enumerated value; read/write. One of:
+200
+- Audio Samples201
+- Milliseconds
+Sequence.audioTracks¶
+app.project.sequences[index].audioTracks
+Description¶
+An array of audio Track objects in the sequence.
+Type¶
+TrackCollection object; read-only.
+Sequence.end¶
+app.project.sequences[index].end
+Description¶
+The time, in ticks, of the end of the sequence.
+Type¶
+String; read-only.
+Sequence.frameSizeHorizontal¶
+app.project.sequences[index].frameSizeHorizontal
+Description¶
+The horizontal frame size, or width, of the sequence.
+Set this attribute with the Sequence.setSettings() method.
+Type¶
+Integer; read-only.
+Sequence.frameSizeVertical¶
+app.project.sequences[index].frameSizeVertical
+Description¶
+The vertical frame size, or height, of the sequence.
+Set this attribute with the Sequence.setSettings() method.
+Type¶
+Integer; read-only.
+Sequence.id¶
+app.project.sequences[index].id
+Description¶
+This is the ordinal assigned to the sequence upon creation.
+If this is the thirty-third sequence created within the project during a given Premiere Pro session, this value will be 33
+.
+Note
+In testing, this attribute seems unstable and produces unreliable results. Recommend using Sequence.sequenceID instead.
+Type¶
+Integer, read-only.
+Sequence.markers¶
+app.project.sequences[index].markers
+Description¶
+An array of Marker objects in the sequence.
+Type¶
+MarkerCollection object, read-only;
+Sequence.name¶
+app.project.sequences[index].name
+Description¶
+The name of the sequence.
+Type¶
+String; read/write.
+Sequence.projectItem¶
+app.project.sequences[index].projectItem
+Description¶
+The ProjectItem object associated with the sequence.
+Note
+Not all sequences will have a projectItem
+. There may be sequences in a project that Premiere generates that are invisible to the user, these do not have projectItems
+Type¶
+ProjectItem object; read-only.
+Sequence.sequenceID¶
+app.project.sequences[index].sequenceID
+Description¶
+The unique identifier assigned to this sequence, at the time of its creation, in the form of xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Type¶
+String; read-only.
+Sequence.timebase¶
+app.project.sequences[index].timebase
+Description¶
+The number of ticks per frame in the sequence. Converted to seconds, this is commonly referred to as the frame duration of the sequence.
+Type¶
+String; read-only.
+Sequence.videoDisplayFormat¶
+app.project.sequences[index].videoDisplayFormat
+Description¶
+The video display format of the sequence.
+Set this attribute with the Sequence.setSettings() method.
+Type¶
+An enumerated value; read/write. One of:
+100
+- 24 Timecode101
+- 25 Timecode102
+- 29.97 Drop Timecode103
+- 29.97 Non-Drop Timecode104
+- 30 Timecode105
+- 50 Timecode106
+- 59.94 Drop Timecode107
+- 59.94 Non-Drop Timecode108
+- 60 Timecode109
+- Frames110
+- 23.976 Timecode111
+- 16mm Feet + Frames112
+- 35mm Feet + Frames113
+- 48 Timecode
+Sequence.videoTracks¶
+app.project.sequences[index].videoTracks
+Description¶
+An array of video Track objects in the sequence.
+Type¶
+TrackCollection object; read-only.
+Sequence.zeroPoint¶
+app.project.sequences[index].zeroPoint
+Description¶
+The starting time, in ticks, of the sequence.
+Set this attribute with the Sequence.setZeroPoint() method.
+Type¶
+String; read-only.
+Methods¶
+Sequence.attachCustomProperty()¶
+app.project.sequences[index].attachCustomProperty(propertyID, propertyValue)
+Description¶
+Attaches a custom property, and its value, to the sequence. This property is visible if/when the sequence is exported to FCP XML.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+propertyID |
+String | ID of custom property. |
+propertyValue |
+String | Value of custom property. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.autoReframeSequence()¶
+app.project.sequences[index].autoReframeSequence(numerator, denominator, motionPreset, newName, useNestedSequences)
+Description¶
+Generates a new, auto-reframed sequence.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+Integer |
+Numerator of desired frame aspect ratio. |
+|
+|
+Integer |
+Denominator of desired frame aspect ratio. |
+|
+|
+String |
+One of:
+|
+|
+|
+String |
+A name for a newly created sequence. |
+|
+|
+Boolean |
+Whether to honor nested sequence. |
+Returns¶
+The new Sequence object.
+Example¶
+var sequence = app.project.activeSequence;
+if (sequence) {
+var numerator = 1;
+var denominator = 1;
+var motionPreset = 'default'; // 'default', 'faster', 'slower'
+var newName = sequence.name + ', auto-reframed.';
+var useNestedSequences = false;
+var newSequence = sequence.autoReframeSequence(numerator, denominator, motionPreset, newName, useNestedSequences);
+if (newSequence) {
+alert('Created reframed sequence: ' + newName + '.');
+} else {
+alert('Failed to create re-framed sequence: ' + newName + '.');
+}
+} else {
+alert('No active sequence');
+}
+Sequence.clone()¶
+app.project.sequences[index].clone()
+Description¶
+Creates a clone, or a duplicate, of the sequence.
+Parameters¶
+None.
+Returns¶
+Boolean; true
+if successful.
+Sequence.close()¶
+app.project.sequences[index].close()
+Description¶
+Closes the sequence.
+Parameters¶
+None.
+Returns¶
+Boolean; true
+if successful.
+Sequence.createCaptionTrack()¶
+app.project.sequences[index].createCaptionTrack(projectItem, startAtTime, [captionFormat])
+Description¶
+Creates a caption track in the sequence using caption data from a ProjectItem object.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+A captions source clip (e.g. .srt) |
+|
+|
+|
+Float |
+Offset in seconds from start of sequence |
+|
+|
+|
+Caption format of the new track. Optional, default is
+|
+Returns¶
+Returns a boolean; true
+if successful.
+Example¶
+app.project.activeSequence.createCaptionTrack(projectItem, 0, Sequence.CAPTION_FORMAT_708);
+Sequence.createSubsequence()¶
+app.project.sequences[index].createSubsequence([ignoreTrackTargeting])
+Description¶
+Creates a new sequence, from the in point to the out point, which is a sub-sequence of the original sequence.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+ignoreTrackTargeting |
+Boolean | Whether the new sequence should ignore the track targeting, in the original sequence. Optional, default is false |
+Returns¶
+Returns the newly-created Sequence object.
+Note
+This is not the same as nesting. The newly-created sequence is not inserted back into the original sequence. To nest, see the example function below.
+Example¶
+function nestSelection() {
+var activeSequence = app.project.activeSequence;
+var selection = activeSequence.getSelection();
+if (!selection.length) {
+return;
+}
+var trackId = selection[0].parentTrackIndex;
+var originalInPoint = activeSequence.getInPointAsTime();
+var originalOutPoint = activeSequence.getOutPointAsTime();
+var start = selection[0].start;
+var end = selection[selection.length - 1].end;
+activeSequence.setInPoint(start.seconds);
+activeSequence.setOutPoint(end.seconds);
+var nestedSequence = activeSequence.createSubsequence(true);
+activeSequence.videoTracks[trackId].overwriteClip(nestedSequence.projectItem, start.seconds);
+activeSequence.setInPoint(originalInPoint.seconds);
+activeSequence.setOutPoint(originalOutPoint.seconds);
+return nestedSequence;
+}
+Sequence.exportAsFinalCutProXML()¶
+app.project.sequences[index].exportAsFinalCutProXML(outputPath)
+Description¶
+Creates a new FCP XML representation of the sequence and its constituent media.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+outputPath |
+String | The output path for the new FCP XML file. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.exportAsMediaDirect()¶
+app.project.sequences[index].exportAsMediaDirect(outputPath, presetPath, workAreaType)
+Description¶
+Renders the sequence to the specified output path, using the specified output preset (.epr file), and honoring the specified work area type.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+An output path, to which to render the media. |
+|
+|
+String |
+Path to the preset file (.epr file) which contains the encoding settings. |
+|
+|
+Integer |
+The work area type to be rendered (see below). One of:
+|
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.exportAsProject()¶
+app.project.sequences[index].exportAsProject(outputPath)
+Description¶
+Creates a new Project object containing only the given sequence and its constituent media.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+outputPath |
+String | The output path for the new project. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.getExportFileExtension()¶
+app.project.sequences[index].getExportFileExtension(outputPresetPath)
+Description¶
+Retrieves the file extension associated with the specified output preset (.epr file).
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+outputPresetPath |
+String | The output preset to be used. |
+Returns¶
+Returns a string.
+Sequence.getInPoint()¶
+app.project.sequences[index].getInPoint()
+Description¶
+Retrieves the current sequence in point, in seconds.
+Parameters¶
+None.
+Returns¶
+Returns a string.
+Sequence.getInPointAsTime()¶
+app.project.sequences[index].getInPointAsTime()
+Description¶
+Retrieves the current sequence in point.
+Parameters¶
+None.
+Returns¶
+Returns a Time object.
+Sequence.getOutPoint()¶
+app.project.sequences[index].getOutPoint()
+Description¶
+Retrieves the current sequence out point, in seconds.
+Parameters¶
+None.
+Returns¶
+Returns a string.
+Sequence.getOutPointAsTime()¶
+app.project.sequences[index].getOutPointAsTime()
+Description¶
+Retrieves the current sequence out point.
+Parameters¶
+None.
+Returns¶
+Returns a Time object.
+Sequence.getPlayerPosition()¶
+app.project.sequences[index].getPlayerPosition()
+Description¶
+Retrieves the position of the CTI (Current Time Indicator), in ticks.
+Parameters¶
+None.
+Returns¶
+Returns a Time object.
+Sequence.getSelection()¶
+app.project.sequences[index].getSelection()
+Description¶
+An array of Track item objects, of the selected clips in the sequence, in temporal order.
+Parameters¶
+None.
+Returns¶
+Returns a TrackItemCollection object.
+Sequence.getSettings()¶
+app.project.sequences[index].getSettings()
+Description¶
+Retrieves the settings of the current sequence.
+Parameters¶
+None.
+Returns¶
+Returns an object; a sequence settings structure.
+|
+Property |
+Type |
+Description |
+|---|---|---|
+|
+|
+Integer |
+Number of audio channels in the sequence. |
+|
+|
+Integer |
+Audio channel type. One of:
+|
+|
+|
+Integer |
+Audio timecode display format. One of:
+|
+|
+|
+Audio sample rate. |
+|
+|
+|
+Boolean |
+Whether Auto Tone Map Media is checked. |
+|
+|
+Boolean |
+Whether sequence is composited in linear color. |
+|
+|
+String |
+The GUID of the editing mode. |
+|
+|
+Boolean |
+Whether sequence is composited at maximum depth. |
+|
+|
+Boolean |
+Whether sequence is rendered at maximum quality. |
+|
+|
+String |
+Four character code of preview codec in use. |
+|
+|
+Integer |
+Width of preview frame. |
+|
+|
+Integer |
+Height of preview frame. |
+|
+|
+Integer |
+Path to the output preset (.epr file) being used for preview file rendering. |
+|
+|
+Integer |
+Video time display format. One of:
+|
+|
+|
+Integer |
+Video field type. One of:
+|
+|
+|
+Integer |
+Height of sequence video frame. |
+|
+|
+Integer |
+Width of sequence video frame. |
+|
+|
+String |
+Pixel aspect ratio. |
+|
+|
+Integer |
+The horizontal captured view, in degrees, for VR. |
+|
+|
+Integer |
+The vertical captured view, in degrees, for VR. |
+|
+|
+Integer |
+The layout of footage in use, for VR. One of:
+|
+|
+|
+Integer |
+The projection type in use, for VR footage. One of:
+|
+Sequence.getWorkAreaInPoint()¶
+app.project.sequences[index].getWorkAreaInPoint()
+Description¶
+Retrieves the current sequence work area in point, in seconds.
+Parameters¶
+None.
+Returns¶
+Returns a string.
+Sequence.getWorkAreaInPointAsTime()¶
+app.project.sequences[index].getWorkAreaInPointAsTime()
+Description¶
+Retrieves the current sequence work area in point.
+Parameters¶
+None.
+Returns¶
+Returns a Time object.
+Sequence.getWorkAreaOutPoint()¶
+app.project.sequences[index].getWorkAreaOutPoint()
+Description¶
+Retrieves the current sequence work area out point, in seconds.
+Parameters¶
+None.
+Returns¶
+Returns a string.
+Sequence.getWorkAreaOutPointAsTime()¶
+app.project.sequences[index].getWorkAreaOutPointAsTime()
+Description¶
+Retrieves the current sequence work area out point.
+Parameters¶
+None.
+Returns¶
+Returns a Time object.
+Sequence.importMGT()¶
+app.project.sequences[index].importMGT(path, time, vidTrackOffset, audTrackOffset)
+Description¶
+Imports a MOGRT, or an After Effects Motion Graphics Template, to the specified video or audio track, at the specified time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+path |
+String | Full path to a valid MOGRT (.mogrt file), created in After Effects. |
+time |
+String | The time at which to insert .mogrt, in ticks. |
+vidTrackOffset |
+Integer | How many tracks from the zero-th video track, into which to insert .mogrt content. |
+audTrackOffset |
+Integer | How many tracks from the zero-th audio track, into which to insert .mogrt content. |
+Returns¶
+Returns a TrackItem object.
+Sequence.importMGTFromLibrary()¶
+app.project.sequences[index].importMGTFromLibrary(libraryName, mgtName, time, vidTrackOffset, audTrackOffset)
+Description¶
+Imports a MOGRT, or an After Effects Motion Graphics Template, from the current Premiere Pro user's Creative Cloud Libraries, to the specified video or audio track, at the specified time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+libraryName |
+String | The name of Library (from the current PPro user's Creative Cloud Libraries). |
+mgtName |
+String | The name of .mogrt within that library. |
+time |
+String | The time at which to insert .mogrt, in ticks. |
+vidTrackOffset |
+Integer | How many tracks from the zero-th video track, into which to insert .mogrt content. |
+audTrackOffset |
+Integer | How many tracks from the zero-th audio track, into which to insert .mogrt content. |
+Returns¶
+Returns a TrackItem object.
+Sequence.insertClip()¶
+app.project.sequences[index].insertClip(projectItem, time, vTrackIndex, aTrackIndex)
+Description¶
+Inserts a clip into the sequence, on the specified video and audio tracks, at the specified time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectItem |
+ProjectItem object | A project item from which to get media. |
+time |
+Time | The time at which to add project item. |
+vTrackIndex |
+Integer | The (zero-based) track index, into which to insert video. |
+aTrackIndex |
+Integer | The (zero-based) track index, into which to insert audio. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.isDoneAnalyzingForVideoEffects()¶
+app.project.sequences[index].isDoneAnalyzingForVideoEffects()
+Description¶
+Returns whether or not the sequence is done analyzing for video effects.
+Parameters¶
+None.
+Returns¶
+Returns a boolean.
+Sequence.isWorkAreaEnabled()¶
+app.project.sequences[index].isWorkAreaEnabled()
+Description¶
+Returns whether or not the sequence work area bar is enabled.
+Note
+The work area bar is disabled by default. To enable it, check 'Work Area Bar' in the sequence hamburger menu.
+Parameters¶
+None.
+Returns¶
+Returns a boolean.
+Sequence.linkSelection()¶
+app.project.sequences[index].linkSelection()
+Description¶
+Links the selected video and audio clips in the sequence.
+Parameters¶
+None.
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.overwriteClip()¶
+app.project.sequences[index].overwriteClip(projectItem, time, vTrackIndex, aTrackIndex)
+Description¶
+Inserts a clip into the sequence, overwriting existing clips, on the specified video and audio tracks, at the specified time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectItem |
+ProjectItem object | A project item from which to get media. |
+time |
+String | The time at which to add project item, in seconds. |
+vTrackIndex |
+Integer | The (zero-based) track index, into which to insert video. |
+aTrackIndex |
+Integer | The (zero-based) track index, into which to insert audio. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.performSceneEditDetectionOnSelection()¶
+app.project.sequences[index].performSceneEditDetectionOnSelection(actionDesired, applyCutsToLinkedAudio, sensitivity)
+Description¶
+Performs cut detection on the sequence selection.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+String |
+One of:
+|
+|
+|
+Boolean |
+Whether to apply detected cuts on linked audio. |
+|
+|
+String |
+One of:
+|
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.setInPoint()¶
+app.project.sequences[index].setInPoint(time)
+Description¶
+Sets a new sequence in point.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Integer or Time object | A new time in seconds. |
+Returns¶
+Null.
+Sequence.setOutPoint()¶
+app.project.sequences[index].setOutPoint(time)
+Description¶
+Sets a new sequence out point.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Integer or Time object | A new time in seconds. |
+Returns¶
+Null.
+Sequence.setPlayerPosition()¶
+app.project.sequences[index].setPlayerPosition(time)
+Description¶
+Sets the position of the CTI (Current Time Indicator) in the sequence.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+String | A new time in ticks. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.setSettings()¶
+app.project.sequences[index].setSettings(sequenceSettings)
+Description¶
+Sets the settings of the current sequence. [Editorial: I apologize for any perceived pedantry; sometimes, obvious documentation needs to be obvious. -bbb]
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+sequenceSettings |
+Object |
+A sequence settings object, obtained via Sequence.getSettings(). |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.setWorkAreaInPoint()¶
+app.project.sequences[index].setWorkAreaInPoint(time)
+Description¶
+Sets a new sequence work area in point.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Integer or Time object | A new time in seconds. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.setWorkAreaOutPoint()¶
+app.project.sequences[index].setWorkAreaOutPoint(time)
+Description¶
+Sets a new sequence work area out point.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Integer or Time object | A new time in seconds. |
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.unlinkSelection()¶
+app.project.sequences[index].unlinkSelection()
+Description¶
+Unlinks the selected video and audio clips in the sequence.
+Parameters¶
+None.
+Returns¶
+Returns a boolean; true
+if successful.
+Sequence.setZeroPoint()¶
+app.project.sequences[index].setZeroPoint(newZeroPoint)
+Description¶
+Set the starting time of the sequence.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+newZeroPoint |
+String | The new zero point in ticks. |
+Returns¶
+Returns a boolean; true
+if successful.
+Track object¶
+app.project.sequences[index].audioTracks[index]
+app.project.sequences[index].videoTracks[index]
+Description¶
+The Track object represents a video or audio track, within a Sequence object.
+Attributes¶
+Track.clips¶
+app.project.sequences[index].audioTracks[index].clips
+app.project.sequences[index].videoTracks[index].clips
+Description¶
+An array of Track item objects, contained within the track, in temporal order.
+Type¶
+TrackItemCollection object, read-only;
+Track.id¶
+app.project.sequences[index].audioTracks[index].id
+app.project.sequences[index].videoTracks[index].id
+Description¶
+This is the ordinal assigned to the track, upon creation.
+Type¶
+Integer, read-only.
+Track.mediaType¶
+app.project.sequences[index].audioTracks[index].mediaType
+app.project.sequences[index].videoTracks[index].mediaType
+Description¶
+The type of media, contained in this track.
+Type¶
+String, read-only. One of:
+Audio
+Video
+Track.name¶
+app.project.sequences[index].audioTracks[index].name
+app.project.sequences[index].videoTracks[index].name
+Description¶
+The name of the track.
+Type¶
+String; read-only.
+Track.transitions¶
+app.project.sequences[index].audioTracks[index].transitions
+app.project.sequences[index].videoTracks[index].transitions
+Description¶
+An array of transitions objects, contained within the track, in temporal order.
+Type¶
+TrackItemCollection object, read-only;
+Methods¶
+Track.insertClip()¶
+app.project.sequences[index].audioTracks[index].insertClip(projectItem, time, vTrackIndex, aTrackIndex)
+app.project.sequences[index].videoTracks[index].insertClip(projectItem, time, vTrackIndex, aTrackIndex)
+Description¶
+Adds a 'clip' (media segment from a ProjectItem object) to the track, at the specified time. Media will be inserted, at that time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectItem |
+ProjectItem object | A project item from which to get media. |
+time |
+String | The time at which to add project item, in ticks. |
+vTrackIndex |
+Integer | The (zero-based) track index, into which to insert video. |
+aTrackIndex |
+Integer | The (zero-based) track index, into which to insert audio. |
+Returns¶
+None.
+Track.isMuted()¶
+app.project.sequences[index].audioTracks[index].isMuted()
+app.project.sequences[index].videoTracks[index].isMuted()
+Description¶
+Retrieves the current mute state, of the track.
+Parameters¶
+None.
+Returns¶
+Returns true
+if track is currently muted; false
+if not.
+Track.overwriteClip()¶
+app.project.sequences[index].audioTracks[index].overwriteClip(projectItem, time)
+app.project.sequences[index].videoTracks[index].overwriteClip(projectItem, time)
+Description¶
+Adds a 'clip' (media segment from a ProjectItem object) to the track, at the specified time. This will overwrite any existing media, at that time.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+projectItem |
+ProjectItem object | A project item from which to get media. |
+time |
+String | The time at which to add project item, in ticks. |
+Returns¶
+Returns true
+.
+Track.setMute()¶
+app.project.sequences[index].audioTracks[index].setMute(isMuted)
+app.project.sequences[index].videoTracks[index].setMute(isMuted)
+Description¶
+Sets the mute state, of the track.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+isMuted |
+Integer | If 1 , mute the track. If 0 , the track will be unmuted. |
+Returns¶
+Returns 0
+if successful.
+Other
+AudioChannelMapping object¶
+app.project.rootItem.children[index].getAudioChannelMapping
+Description¶
+The AudioChannelMapping object defines the audio channel mapping applied to a given ProjectItem object.
+Attributes¶
+AudioChannelMapping.audioChannelsType¶
+app.project.rootItem.children[index].getAudioChannelMapping.audioChannelsType
+Description¶
+The type of the audio contained in this channel. Will be 0
+, 1
+or 2
+, corresponding to AUDIOCHANNELTYPE_Mono
+, AUDIOCHANNELTYPE_Stereo
+, or AUDIOCHANNELTYPE_51
+.
+AudioChannelMapping.audioClipsNumber¶
+app.project.rootItem.children[index].getAudioChannelMapping.audioClipsNumber
+Description¶
+The number of audio clips associated with this audio channel.
+Methods¶
+AudioChannelMapping.setMappingForChannel()¶
+app.project.rootItem.children[index].setMappingForChannel(channelIndex, sourceChannelIndex)
+Description¶
+Maps a source channel to the specified channel index.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+channelIndex |
+Integer | The index of a channel to be mapped. |
+sourceChannelIndex |
+Integer | The index of a source channel to map. |
+Returns¶
+Returns true
+if successful, false
+if that mapping is unsupported.
+Time object¶
+myTime = new Time()
+Description¶
+An object representing a time. Internally, the time is computed in ticks
+; there are 254016000000 ticks per second. That time can be accessed in different representations, including as a timecode string.
+Attributes¶
+Time.seconds¶
+myTime.seconds
+Description¶
+The time value, expressed in seconds.
+Type¶
+Number.
+Time.ticks¶
+myTime.ticks
+Description¶
+The time value, expressed in ticks.
+Type¶
+String.
+Methods¶
+Time.getFormatted()¶
+myTime.getFormatted(frameRate, displayFormat)
+Description¶
+Returns the value of the Time
+passed, as a string, formatted in the specified display format.
+Parameters¶
+|
+Parameter |
+Type |
+Description |
+|---|---|---|
+|
+|
+Time object with a duration of a single frame of the frame rate to be used. |
+|
+|
+|
+Integer |
+The display format to use. One of:
+|
+Returns¶
+String.
+Time.setSecondsAsFraction()¶
+myTime.setSecondsAsFraction(numerator, denominator)
+Description¶
+Sets the Time object to the result of dividing the numerator by the denominator.
+Parameters¶
+Both the numerator and the denominator are integers.
+Returns¶
+Boolean; true
+if successful.
+Collection
+Collection object¶
+Like an array, a collection associates a set of objects or values as a logical group and provides access to them by index. However, most collection objects are read-only. You do not assign objects to them yourself — their contents update automatically as objects are created or deleted.
+Objects¶
+- ComponentCollection object - todo.
+- MarkerCollection object - a collection of the Marker objects in a ProjectItem object and Sequence object.
+- ProjectCollection object - a collection of Project objects.
+- ProjectItemCollection object - a collection of ProjectItem objects.
+- SequenceCollection object - a collection of Sequence objects.
+- TrackCollection object - a collection of Track objects.
+- TrackItemCollection object - a collection of TrackItem objects.
+Attributes¶
+| Attribute | Type | Description |
+|---|---|---|
+length |
+Integer | The number of objects in the collection. |
+Methods¶
+| Method | Return Type | Description |
+|---|---|---|
+[] |
+Object | Retrieves an object in the collection by its index number. The first object is at index 1. |
+ComponentCollection object¶
+app.project.rootItem.children[index].videoComponents()
+app.project.sequences[index].audioTracks[index].clips[index].components
+app.project.sequences[index].videoTracks[index].clips[index].components
+Info
+ComponentCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with ComponentCollection.
+Attributes¶
+ComponentCollection.numItems¶
+app.project.rootItem.children[index].videoComponents().numItems
+app.project.sequences[index].audioTracks[index].clips[index].components.numItems
+app.project.sequences[index].videoTracks[index].clips[index].components.numItems
+Description¶
+The number of items in a ComponentCollection.
+Type¶
+Integer, read-only.
+MarkerCollection object¶
+app.project.sequences[index].markers
+app.project.rootItem.children[index].getMarkers()
+The MarkerCollection object represents a collection of Marker objects in a ProjectItem object and Sequence object.
+Info
+MarkerCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with MarkerCollection.
+Attributes¶
+MarkerCollection.numMarkers¶
+app.project.sequences[index].markers.numMarkers
+app.project.rootItem.children[index].getMarkers().numMarkers
+Description¶
+The count of marker objects in the project item or sequence.
+Type¶
+Integer, read-only.
+Methods¶
+MarkerCollection.createMarker()¶
+app.project.sequences[index].markers.createMarker(time)
+app.project.rootItem.children[index].getMarkers().createMarker(time)
+Description¶
+Create a new Marker object on a project item or a sequence.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+time |
+Float | A time, in seconds, where marker should be created. |
+Returns¶
+Marker object if successful.
+MarkerCollection.deleteMarker()¶
+app.project.sequences[index].markers.deleteMarker(marker)
+app.project.rootItem.children[index].getMarkers().deleteMarker(marker)
+Description¶
+Remove a given marker object from a collection.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+marker |
+Marker object | A marker object to remove from collection. |
+Returns¶
+Boolean.
+Examples¶
+Remove all markers from the active sequence
+var markers = app.project.activeSequence.markers;
+var marker = markers.getFirstMarker();
+var count = markers.numMarkers;
+while (marker) {
+markers.deleteMarker(marker);
+marker = markers.getFirstMarker();
+}
+alert('Removed ' + count.toString() + ' markers');
+MarkerCollection.getFirstMarker()¶
+app.project.sequences[index].markers.getFirstMarker()
+app.project.rootItem.children[index].getMarkers().getFirstMarker()
+Description¶
+Retrieve the first marker object, sorted by time in seconds, on a given project item or sequence.
+Parameters¶
+None.
+Returns¶
+Marker object or undefined
+.
+MarkerCollection.getLastMarker()¶
+app.project.sequences[index].markers.getLastMarker()
+app.project.rootItem.children[index].getMarkers().getLastMarker()
+Description¶
+Retrieve the very last marker object, sorted by time in seconds, on a given project item or sequence.
+Parameters¶
+None.
+Returns¶
+Marker object or undefined
+.
+MarkerCollection.getNextMarker()¶
+app.project.sequences[index].markers.getNextMarker(currentMarker)
+app.project.rootItem.children[index].getMarkers().getNextMarker(currentMarker)
+Description¶
+Get the next available marker, sorted by seconds, starting from a given one.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+currentMarker |
+Marker object | A starting marker object, from which to get a next one. |
+Returns¶
+Marker object or undefined
+.
+MarkerCollection.getPrevMarker()¶
+app.project.sequences[index].markers.getPrevMarker(currentMarker)
+app.project.rootItem.children[index].getMarkers().getPrevMarker(currentMarker)
+Description¶
+Get the previous available marker, sorted by seconds, starting from a given one.
+Parameters¶
+| Parameter | Type | Description |
+|---|---|---|
+currentMarker |
+Marker object | A starting marker object, from which to get a previous one. |
+Returns¶
+Marker object or undefined
+.
+ProjectCollection object¶
+app.projects
+app.production.projects
+The ProjectCollection object represents a collection of Project objects.
+Info
+ProjectCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with ProjectCollection.
+Attributes¶
+ProjectCollection.numProjects¶
+app.projects.numProjects
+app.production.projects.numProjects
+Description¶
+The total number of projects and productions found in the Project panel.
+Type¶
+Integer, read-only.
+ProjectItemCollection object¶
+app.project.rootItem.children
+The ProjectItemCollection object represents a collection of ProjectItem objects in an active project.
+Info
+ProjectItemCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with ProjectItemCollection.
+Attributes¶
+ProjectItemCollection.numItems¶
+app.project.rootItem.children.numItems
+Description¶
+The total number of items in the active project.
+Type¶
+Integer, read-only.
+SequenceCollection object¶
+app.project.sequences
+The SequenceCollection object represents a collection of all the Sequence objects in the active project.
+Info
+SequenceCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with SequenceCollection.
+Attributes¶
+SequenceCollection.numSequences¶
+app.project.sequences.numSequences
+Description¶
+The total number of sequences in the active project.
+Type¶
+Integer, read-only.
+TrackCollection object¶
+app.project.sequences[index].audioTracks
+app.project.sequences[index].videoTracks
+The TrackCollection object represents a collection of Track objects in a sequence.
+Info
+TrackCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with TrackCollection.
+Attributes¶
+TrackCollection.numTracks¶
+app.project.sequences[index].audioTracks.numTracks
+app.project.sequences[index].videoTracks.numTracks
+Description¶
+The total number of tracks in the sequence.
+Type¶
+Integer, read-only.
+TrackItemCollection object¶
+app.project.sequences[index].audioTracks[index].clips
+app.project.sequences[index].videoTracks[index].clips
+The TrackItemCollection object represents a collection of TrackItem objects on a track.
+Info
+TrackItemCollection is a subclass of Collection object. All methods and attributes of Collection, in addition to those listed below, are available when working with TrackItemCollection.
+Attributes¶
+TrackItemCollection.numItems¶
+app.project.sequences[index].audioTracks[index].clips.numItems
+app.project.sequences[index].videoTracks[index].clips.numItems
+Description¶
+The total number of clips on a track.
+Type¶
+Integer, read-only.
