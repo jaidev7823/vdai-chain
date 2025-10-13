@@ -12,9 +12,6 @@ docs = raw.get("docs", [])
 # Define standard column titles we care about
 standard_titles = {"description", "type", "example", "parameters", "returns", "attributes", "methods"}
 
-# Result storage: list of structured objects
-structured_data = []
-
 # Temporary storage per section/object
 temp_store = defaultdict(lambda: defaultdict(dict))
 # Key: (section, object_name)
@@ -30,42 +27,33 @@ for entry in docs:
     # First segment of location as section
     section = loc.split("/")[0]
 
-    # Decide object_name
-    # If title is a standard column, we assign under current object
+    # Determine if this title is a standard column
     if title.lower() in standard_titles:
-        # Try to get current object_name
-        object_name = None
-        # Look backwards in temp_store for latest object in this section
-        # If no object exists yet, skip
+        # Assign under latest object in this section if exists
         objects_in_section = [k for k in temp_store if k[0] == section]
-        if objects_in_section:
-            object_name = objects_in_section[-1][1]
-        else:
-            # No object yet, skip this metadata
-            continue
-    else:
-        # Treat this title as object_name
-        object_name = title
-
-    key = (section, object_name)
-    # Assign text to the right field if it's a standard title
-    if title.lower() in standard_titles:
+        if not objects_in_section:
+            continue  # Skip metadata without object
+        object_name = objects_in_section[-1][1]
+        key = (section, object_name)
         temp_store[key][title.lower()] = text
     else:
-        # New object: initialize row with empty standard columns
-        temp_store[key].update({col: "" for col in standard_titles})
+        # Treat this as a new object or formula
+        object_name = title
+        key = (section, object_name)
+        # Initialize empty standard columns if not exists
+        if key not in temp_store:
+            temp_store[key].update({col: "" for col in standard_titles})
+        # Store extra info in 'details' and keep raw html in 'raw_text'
+        temp_store[key]["details"] = text
+        # temp_store[key]["raw_text"] = text
 
-# Convert temp_store into list of dicts
+# Group by section -> object_name
+grouped = defaultdict(dict)
 for (section, object_name), fields in temp_store.items():
-    row = {
-        "section": section,
-        "object_name": object_name,
-    }
-    row.update(fields)
-    structured_data.append(row)
+    grouped[section][object_name] = fields
 
-# Save as JSON
-with open("ppro_structured.json", "w", encoding="utf-8") as f:
-    json.dump(structured_data, f, indent=2, ensure_ascii=False)
+# Save grouped JSON
+with open("ppro_grouped_with_details.json", "w", encoding="utf-8") as f:
+    json.dump(grouped, f, indent=2, ensure_ascii=False)
 
-print(f"Structured JSON saved. Total objects: {len(structured_data)}")
+print(f"Grouped JSON with details saved. Sections: {len(grouped)}")
