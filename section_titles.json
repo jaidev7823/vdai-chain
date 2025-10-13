@@ -1,0 +1,183 @@
+{
+  "#3rd-party-scripting-is-moving-to-uxp": [
+    "3rd Party Scripting is Moving to UXP"
+  ],
+  "#navigating-the-guide": [
+    "Navigating the Guide"
+  ],
+  "#contribution": [
+    "Contribution"
+  ],
+  "#licensing-ownership": [
+    "Licensing &amp; Ownership"
+  ],
+  "application": [
+    "Application object",
+    "Attributes",
+    "Description",
+    "Example",
+    "Methods",
+    "Parameters",
+    "Returns",
+    "Type",
+    "app.anywhere",
+    "app.version"
+  ],
+  "collection": [
+    "Attributes",
+    "Collection object",
+    "ComponentCollection object",
+    "ComponentCollection.numItems",
+    "Description",
+    "Examples",
+    "MarkerCollection object",
+    "MarkerCollection.createMarker()",
+    "MarkerCollection.deleteMarker()",
+    "MarkerCollection.getFirstMarker()",
+    "MarkerCollection.getLastMarker()",
+    "MarkerCollection.getNextMarker()",
+    "MarkerCollection.getPrevMarker()",
+    "MarkerCollection.numMarkers",
+    "Methods",
+    "Objects",
+    "Parameters",
+    "ProjectCollection object",
+    "ProjectCollection.numProjects",
+    "ProjectItemCollection object",
+    "ProjectItemCollection.numItems",
+    "Returns",
+    "SequenceCollection object",
+    "SequenceCollection.numSequences",
+    "TrackCollection object",
+    "TrackCollection.numTracks",
+    "TrackItemCollection object",
+    "TrackItemCollection.numItems",
+    "Type"
+  ],
+  "general": [
+    "Anywhere object",
+    "Anywhere.getAuthenticationToken()",
+    "Anywhere.getCurrentEditingSessionActiveSequenceURL()",
+    "Anywhere.getCurrentEditingSessionSelectionURL()",
+    "Anywhere.getCurrentEditingSessionURL()",
+    "Anywhere.isProductionOpen()",
+    "Anywhere.listProductions()",
+    "Anywhere.openProduction()",
+    "Anywhere.setAuthenticationToken()",
+    "Attributes",
+    "Description",
+    "Encoder object",
+ 
+    "Encoder.setSidecarXMPEnabled()",
+    "Encoder.startBatch()",
+    "Example",
+    "Marker object",
+    "Marker.comments",
+    "Marker.end",
+  
+    "Marker.setTypeAsWebLink()",
+    "Marker.start",
+    "Marker.type",
+    "Metadata object",
+   
+    "Metadata.setMetadataValue()",
+    "Metadata.updateMarker()",
+    "Methods",
+    "Parameters",
+    "Production object",
+  
+    "Production.projects",
+    "Production.setLocked()",
+    "Project object",
+    "Project.activeSequence",
+    "Project.addPropertyToProjectMetadataSchema()",
+ 
+    "ProjectManager.includeConformedAudio",
+    "ProjectManager.includePreviews",
+    "ProjectManager.renameMedia",
+    "Properties object",
+    "Properties.clearProperty()",
+
+    "Properties.setProperty()",
+    "Returns",
+    "SourceMonitor object",
+  
+    "SourceMonitor.play()",
+    "Type"
+  ],
+  "introduction": [
+    "Adobe Premiere Pro 13.x",
+    "Adobe Premiere Pro 14.0",
+    "Adobe Premiere Pro 15.4",
+    "Adobe Premiere Pro 23.0",
+    "Changelog",
+    "Development and debugging tools",
+    "Example code",
+    "How to Execute ExtendScript in Premiere Pro",
+    "Overview"
+  ],
+  "item": [
+    "Attributes",
+    "Description",
+    "Example",
+    "Methods",
+    "Parameters",
+    "ProjectItem object",
+  
+    "ProjectItem.type",
+    "ProjectItem.videoComponents()",
+    "Returns",
+    "TrackItem object",
+   
+    "TrackItem.type",
+    "Type"
+  ],
+  "other": [
+    "Attributes",
+    "AudioChannelMapping object",
+    "AudioChannelMapping.audioChannelsType",
+ 
+    "Description",
+    "Methods",
+    "Parameters",
+    "Returns",
+    "Time object",
+    "Time.getFormatted()",
+    "Time.seconds",
+    "Time.setSecondsAsFraction()",
+    "Time.ticks",
+    "Type"
+  ],
+  "sequence": [
+    "Attributes",
+    "Component object",
+    "Component.displayName",
+    "Component.matchName",
+    "Component.properties",
+    "ComponentParam object",
+    "ComponentParam.addKey()",
+    "ComponentParam.areKeyframesSupported()",
+    "ComponentParam.setValueAtKey()",
+    "Description",
+    "Example",
+    "Methods",
+    "Parameters",
+    "Returns",
+    "Sequence object",
+    "Sequence.attachCustomProperty()",
+    "Sequence.videoDisplayFormat",
+    "Sequence.videoTracks",
+    "Sequence.zeroPoint",
+    "Track object",
+    "Track.clips",
+    "Track.id",
+    "Track.insertClip()",
+    "Track.isMuted()",
+    "Track.mediaType",
+    "Track.name",
+    "Track.overwriteClip()",
+    "Track.setMute()",
+    "Track.transitions",
+    "Type"
+  ]
+}
