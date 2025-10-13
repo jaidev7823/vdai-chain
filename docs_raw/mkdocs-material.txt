@@ -1,8 +1,0 @@
-Focus on the content of your documentation and create a professional static site in minutes. No need to know HTML, CSS or JavaScript – let Material for MkDocs do the heavy lifting for you.
-Serve your documentation with confidence – Material for MkDocs automatically adapts to perfectly fit the available screen estate, no matter the type or size of the viewing device. Desktop. Tablet. Mobile. All great.
-Make it yours – change the colors, fonts, language, icons, logo, and more with a few lines of configuration. Material for MkDocs can be easily extended and provides many options to alter appearance and behavior.
-Don't let your users wait – get incredible value with a small footprint by using one of the fastest themes available with excellent performance, yielding optimal search engine rankings and happy users that return.
-Own your documentation's complete sources and outputs, guaranteeing both integrity and security – no need to entrust the backbone of your product knowledge to third-party platforms. Retain full control.
-You're in good company – choose a mature and actively maintained solution built with state-of-the-art Open Source technologies, trusted by more than 50.000 individuals and organizations. Licensed under MIT.
-By joining the Insiders program, you'll get immediate access to the latest features while also helping support the ongoing development of Material for MkDocs. Thanks to our awesome sponsors, this project is actively maintained and kept in good shape.
-Together, we can build documentation that simply works!
