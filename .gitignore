@@ -1,1 +1,4 @@
 .venv
+embeddings\faiss_index.bin
+embeddings\llama_storage
+logs
