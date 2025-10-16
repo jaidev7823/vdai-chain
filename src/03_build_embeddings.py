@@ -1,71 +1,110 @@
-# 03_build_embeddings.py
 import json
+import sqlite3
 import faiss
 from pathlib import Path
-from llama_index.core import Document, StorageContext, VectorStoreIndex, Settings
-from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.embeddings.ollama import OllamaEmbedding
 
 # === Paths ===
 DATA_PATH = Path("data/processed/ppro_grouped.json")
-FAISS_PATH = Path("embeddings/faiss_index.bin")
-STORAGE_PATH = Path("embeddings/llama_storage")
+DB_PATH = Path("embeddings/metadata.db")
 
-# === Load processed data ===
+FAISS_DIR = Path("embeddings/faiss_indexes")
+FAISS_DIR.mkdir(parents=True, exist_ok=True)
+
+# === Init database ===
+def init_db(conn):
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS metadata (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            section TEXT,
+            object_name TEXT,
+            member_name TEXT,
+            member_type TEXT,
+            full_signature TEXT,
+            return_type TEXT,
+            parameters TEXT,
+            faiss_id_description INTEGER,
+            faiss_id_details INTEGER,
+            faiss_id_example INTEGER
+        )
+    """)
+    conn.commit()
+
+# === Load JSON data ===
 with open(DATA_PATH, encoding="utf-8") as f:
     data = json.load(f)
 
-docs = []
+# === Initialize embedding model ===
+embed_model = OllamaEmbedding(model_name="all-minilm")
+dimension = len(embed_model.get_text_embedding("test"))
+
+# === Create FAISS indexes for each text field ===
+faiss_indexes = {
+    "description": faiss.IndexFlatL2(dimension),
+    "details": faiss.IndexFlatL2(dimension),
+    "example": faiss.IndexFlatL2(dimension),
+}
+
+# === Helper: add embedding safely ===
+def add_to_faiss(index_name, text):
+    if not text or not text.strip():
+        return None
+    vector = embed_model.get_text_embedding(text)
+    idx = faiss_indexes[index_name].ntotal
+    faiss_indexes[index_name].add(vector.reshape(1, -1))
+    return idx
+
+# === Connect to DB ===
+conn = sqlite3.connect(DB_PATH)
+init_db(conn)
+cur = conn.cursor()
+
+# === Process JSON into DB and FAISS ===
+row_count = 0
 for section, objects in data.items():
     for obj, fields in objects.items():
-        # Combine the natural language fields for a richer embedding.
-        text_parts = [
-            f"Function: {obj}",
-            f"Description: {fields.get('description', '')}",
-            f"Parameters: {fields.get('parameters', '')}",
-            f"Details: {fields.get('details', '')}",
-            f"Example: {fields.get('example', '')}"
-        ]
-        text_to_embed = "\n".join(part for part in text_parts if part.split(': ')[1])
+        member_name = obj.split(".")[-1]
+        object_name = obj.split(".")[0]
+        member_type = "method" if "()" in obj else "property"
 
-        # The rest of the fields will be stored in metadata.
-        metadata = {
-            "section": section,
-            "object": obj,
-            "returns": fields.get('returns', ''),
-            "type": fields.get('type', ''),
-            "methods": fields.get('methods', ''),
-            "attributes": fields.get('attributes', '')
-        }
-        
-        # Create the document with a focused text for embedding.
-        docs.append(Document(
-            text=text_to_embed,
-            metadata=metadata
+        desc = fields.get("description", "")
+        details = fields.get("details", "")
+        example = fields.get("example", "")
+        params = fields.get("parameters", "")
+        returns = fields.get("returns", "")
+        signature = details.replace("<p>", "").replace("</p>", "").strip()
+
+        faiss_id_desc = add_to_faiss("description", desc)
+        faiss_id_details = add_to_faiss("details", details)
+        faiss_id_example = add_to_faiss("example", example)
+
+        cur.execute("""
+            INSERT INTO metadata (
+                section, object_name, member_name, member_type,
+                full_signature, return_type, parameters,
+                faiss_id_description, faiss_id_details, faiss_id_example
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            section, object_name, member_name, member_type,
+            signature, returns, params,
+            faiss_id_desc, faiss_id_details, faiss_id_example
         ))
 
-# === Initialize embedding model (Ollama) ===
-embed_model = OllamaEmbedding(model_name="all-minilm")
+        row_count += 1
+        if row_count % 200 == 0:
+            conn.commit()
+            print(f"Processed {row_count} entries...")
 
-# === Determine embedding dimension ===
-sample_vector = embed_model.get_text_embedding("test")
-dimension = len(sample_vector)
+conn.commit()
+conn.close()
 
-# === Create FAISS index ===
-faiss_index = faiss.IndexFlatL2(dimension)
-vector_store = FaissVectorStore(faiss_index=faiss_index)
-storage_context = StorageContext.from_defaults(vector_store=vector_store)
+# === Save FAISS indexes ===
+for name, index in faiss_indexes.items():
+    path = FAISS_DIR / f"{name}.index"
+    faiss.write_index(index, str(path))
+    print(f"Saved {name} FAISS index → {path}")
 
-# === Configure chunk size ===
-Settings.chunk_size = 2048
-
-# === Build and persist ===
-index = VectorStoreIndex.from_documents(docs, storage_context=storage_context, embed_model=embed_model)
-
-# Save FAISS and llama storage
-faiss.write_index(faiss_index, str(FAISS_PATH))
-storage_context.persist(persist_dir=str(STORAGE_PATH))
-
-print("Embeddings built and saved to:")
-print(f"   - FAISS index: {FAISS_PATH}")
-print(f"   - Llama storage: {STORAGE_PATH}")
+print(f"\n✅ Indexed {row_count} metadata entries")
+print(f"SQLite DB → {DB_PATH}")
