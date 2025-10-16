@@ -1,55 +1,140 @@
-# 04_query_engine.py
-from llama_index.core import StorageContext, load_index_from_storage, PromptTemplate
-from llama_index.vector_stores.faiss import FaissVectorStore
-from llama_index.llms.ollama import Ollama
-from llama_index.embeddings.ollama import OllamaEmbedding
+import json
+import sqlite3
 import faiss
 from pathlib import Path
+from llama_index.embeddings.ollama import OllamaEmbedding
+from llama_index.llms.ollama import Ollama
 
 # === Paths ===
-FAISS_PATH = Path("embeddings/faiss_index.bin")
-STORAGE_PATH = Path("embeddings/llama_storage")
+DB_PATH = Path("embeddings/metadata.db")
+FAISS_DIR = Path("embeddings/faiss_indexes")
 
-# === Load FAISS index and storage ===
-faiss_index = faiss.read_index(str(FAISS_PATH))
-vector_store = FaissVectorStore(faiss_index=faiss_index)
-storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=str(STORAGE_PATH))
+# === Load FAISS indexes ===
+faiss_indexes = {
+    "description": faiss.read_index(str(FAISS_DIR / "description.index")),
+    "details": faiss.read_index(str(FAISS_DIR / "details.index")),
+    "example": faiss.read_index(str(FAISS_DIR / "example.index")),
+}
+
+# === Connect DB ===
+conn = sqlite3.connect(DB_PATH)
+conn.row_factory = sqlite3.Row
+cur = conn.cursor()
 
 # === Initialize models ===
 embed_model = OllamaEmbedding(model_name="all-minilm")
 llm = Ollama(model="mistral", request_timeout=12000)
 
-# === Load LlamaIndex ===
-index = load_index_from_storage(storage_context, embed_model=embed_model)
 
-# === Step 1: Retrieve relevant documents ===
-query = "squiz this image to on the ai with proper animation like it is croping whole image to only center part and then scale that part to make width of image full"
-retriever = index.as_retriever(similarity_top_k=10)
-retrieved_nodes = retriever.retrieve(query)
+# === Utility: get embedding ===
+def embed(text: str):
+    return embed_model.get_text_embedding(text).reshape(1, -1)
 
-# === Step 2: Generate a response using the retrieved context ===
-context_str = "\n\n".join([n.get_content() for n in retrieved_nodes])
 
-prompt_template = PromptTemplate(
-    "You are an expert agent for Adobe Premiere Pro. Your task is to create a precise sequence of API calls to accomplish the user\'s request.\n\n"
-    "You must only use the functions provided in the API Documentation section. Do not write any code, variables, or logic.\n\n"
-    "Your output must be a numbered list of the function names from the documentation.\n\n"
-    "User Request: {query_str}\n\n"
-    "API Documentation:\n"
-    "---------------------\n"
-    "{context_str}\n"
-    "---------------------\n\n"
-    "Tool Roadmap:"
-)
+# === Step 1: Break query into sub-actions ===
+def decompose_query(query: str):
+    system_prompt = """You are a Premiere Pro automation agent. 
+Break the user request into clear step-by-step actions required to fulfill it.
+Each action must represent a concrete operation like “find clip”, “apply effect”, “rename layer”, “adjust property”, etc.
+Return as a numbered JSON array like:
+[
+  {"action": "find clip"},
+  {"action": "apply glow effect"},
+  {"action": "rename adjustment layer"}
+]"""
 
-formatted_prompt = prompt_template.format(query_str=query, context_str=context_str)
+    prompt = f"{system_prompt}\n\nUser request: {query}"
+    result = llm.complete(prompt)
+    try:
+        actions = json.loads(result.strip())
+    except:
+        actions = [{"action": line.strip()} for line in result.split("\n") if line.strip()]
+    return actions
 
-response = llm.complete(formatted_prompt)
 
-print("\n--- Query ---")
-print(query)
-print("\n--- Retrieved Documents ---")
-for i, node in enumerate(retrieved_nodes):
-    print(f"Doc {i+1}: (Score: {node.get_score()})\n{node.get_content()}\n---")
-print("\n--- Response ---")
-print(response)
+# === Step 2: Retrieve top functions for each action ===
+def retrieve_functions_for_action(action_text: str, top_k=5, confidence_threshold=0.75):
+    query_vector = embed(action_text)
+    results = []
+
+    for field, index in faiss_indexes.items():
+        distances, indices = index.search(query_vector, top_k)
+        for i, idx in enumerate(indices[0]):
+            if idx == -1:
+                continue
+            confidence = float(1 / (1 + distances[0][i]))  # normalized inverse distance
+            if confidence < confidence_threshold:
+                continue
+
+            cur.execute(f"SELECT * FROM metadata WHERE faiss_id_{field} = ?", (int(idx),))
+            row = cur.fetchone()
+            if not row:
+                continue
+
+            results.append({
+                "field": field,
+                "function": f"{row['object_name']}.{row['member_name']}",
+                "confidence": round(confidence, 3),
+                "desc": row["full_signature"],
+                "section": row["section"],
+            })
+    return sorted(results, key=lambda x: -x["confidence"])[:top_k]
+
+
+# === Step 3: LLM rationale generation ===
+def explain_action_with_functions(action, candidates):
+    func_list = "\n".join([f"- {c['function']} (conf: {c['confidence']})" for c in candidates])
+    context = "\n".join([f"{c['function']} → {c['desc']}" for c in candidates])
+    prompt = f"""You are an expert Premiere Pro API planner.
+Given the action: "{action['action']}"
+and these available functions:
+{func_list}
+
+Explain which function(s) are most suitable and why.
+Use only provided context:
+{context}
+
+Respond in a compact structured JSON like:
+{{
+  "best_function": "...",
+  "reason": "...",
+  "alternatives": ["...", "..."]
+}}"""
+
+    response = llm.complete(prompt)
+    try:
+        return json.loads(response.strip())
+    except:
+        return {"best_function": None, "reason": response.strip(), "alternatives": []}
+
+
+# === Step 4: Main Pipeline ===
+def process_query(query: str):
+    actions = decompose_query(query)
+    full_plan = []
+
+    for action in actions:
+        print(f"\n🧩 Action: {action['action']}")
+        candidates = retrieve_functions_for_action(action["action"])
+        explanation = explain_action_with_functions(action, candidates)
+
+        step_result = {
+            "action": action["action"],
+            "candidates": candidates,
+            "decision": explanation,
+        }
+        full_plan.append(step_result)
+
+        print(f"→ Best Function: {explanation.get('best_function')}")
+        print(f"→ Reason: {explanation.get('reason')}\n")
+
+    return full_plan
+
+
+# === Example Usage ===
+if __name__ == "__main__":
+    user_query = "add red glow on this clip"
+    plan = process_query(user_query)
+
+    print("\n=== FINAL PLAN ===")
+    print(json.dumps(plan, indent=2))
