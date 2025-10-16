@@ -59,3 +59,23 @@ data/processed/ppro_grouped.json
           │
           ▼
 API execution plan / instructions
+
+
+pipeline
+
+User Query
+     │
+     ▼
+Tool Finder (semantic search in FAISS)
+     │
+     ▼
+Candidate Tools (top-k)
+     │
+     ▼
+Context Resolver (LLM)
+     │
+     ▼
+Structured Instructions / Function Call
+     │
+     ▼
+Execution (optional)

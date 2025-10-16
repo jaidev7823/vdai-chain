@@ -2,7 +2,7 @@
 import json
 import faiss
 from pathlib import Path
-from llama_index.core import Document, StorageContext, VectorStoreIndex
+from llama_index.core import Document, StorageContext, VectorStoreIndex, Settings
 from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.embeddings.ollama import OllamaEmbedding
 
@@ -18,10 +18,30 @@ with open(DATA_PATH, encoding="utf-8") as f:
 docs = []
 for section, objects in data.items():
     for obj, fields in objects.items():
-        text = "\n".join(f"{k}: {v}" for k, v in fields.items() if v)
+        # Combine the natural language fields for a richer embedding.
+        text_parts = [
+            f"Function: {obj}",
+            f"Description: {fields.get('description', '')}",
+            f"Parameters: {fields.get('parameters', '')}",
+            f"Details: {fields.get('details', '')}",
+            f"Example: {fields.get('example', '')}"
+        ]
+        text_to_embed = "\n".join(part for part in text_parts if part.split(': ')[1])
+
+        # The rest of the fields will be stored in metadata.
+        metadata = {
+            "section": section,
+            "object": obj,
+            "returns": fields.get('returns', ''),
+            "type": fields.get('type', ''),
+            "methods": fields.get('methods', ''),
+            "attributes": fields.get('attributes', '')
+        }
+        
+        # Create the document with a focused text for embedding.
         docs.append(Document(
-            text=f"[{section}] {obj}\n{text}",
-            metadata={"section": section, "object": obj}
+            text=text_to_embed,
+            metadata=metadata
         ))
 
 # === Initialize embedding model (Ollama) ===
@@ -36,6 +56,9 @@ faiss_index = faiss.IndexFlatL2(dimension)
 vector_store = FaissVectorStore(faiss_index=faiss_index)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
+# === Configure chunk size ===
+Settings.chunk_size = 2048
+
 # === Build and persist ===
 index = VectorStoreIndex.from_documents(docs, storage_context=storage_context, embed_model=embed_model)
 
@@ -43,6 +66,6 @@ index = VectorStoreIndex.from_documents(docs, storage_context=storage_context, e
 faiss.write_index(faiss_index, str(FAISS_PATH))
 storage_context.persist(persist_dir=str(STORAGE_PATH))
 
-print("✅ Embeddings built and saved to:")
+print("Embeddings built and saved to:")
 print(f"   - FAISS index: {FAISS_PATH}")
 print(f"   - Llama storage: {STORAGE_PATH}")
