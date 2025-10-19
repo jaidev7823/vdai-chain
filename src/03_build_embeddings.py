@@ -1,111 +1,85 @@
-import json
 import sqlite3
-import faiss
-import numpy as np  # Added import
-from pathlib import Path
+from llama_index.core import StorageContext, load_index_from_storage
 from llama_index.embeddings.ollama import OllamaEmbedding
+from llama_index.llms.ollama import Ollama
 
-# === Paths ===
-DATA_PATH = Path("data/processed/ppro_grouped.json")
-DB_PATH = Path("embeddings/metadata.db")
-FAISS_DIR = Path("embeddings/faiss_indexes")
-FAISS_DIR.mkdir(parents=True, exist_ok=True)
+SQLITE_DB = "premiere_docs.db"
+FAISS_INDEX = "faiss_index"
+EMBED_MODEL = "nomic-embed-text"
+LLM_MODEL = "llama3.2"
 
-# === Init database ===
-def init_db(conn):
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS metadata (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            section TEXT,
-            object_name TEXT,
-            member_name TEXT,
-            member_type TEXT,
-            full_signature TEXT,
-            return_type TEXT,
-            parameters TEXT,
-            faiss_id_description INTEGER,
-            faiss_id_details INTEGER,
-            faiss_id_example INTEGER
-        )
-    """)
-    conn.commit()
+def load_query_engine():
+    """Load the FAISS index and create query engine"""
+    embed_model = OllamaEmbedding(
+        model_name=EMBED_MODEL,
+        base_url="http://localhost:11434"
+    )
+    
+    llm = Ollama(
+        model=LLM_MODEL,
+        base_url="http://localhost:11434",
+        request_timeout=120.0
+    )
+    
+    # Load from disk
+    storage_context = StorageContext.from_defaults(persist_dir=FAISS_INDEX)
+    index = load_index_from_storage(storage_context, embed_model=embed_model)
+    
+    query_engine = index.as_query_engine(
+        llm=llm,
+        similarity_top_k=5,
+        response_mode="compact"
+    )
+    
+    return query_engine
 
-# === Load JSON ===
-with open(DATA_PATH, encoding="utf-8") as f:
-    data = json.load(f)
+def query_sqlite(query_text):
+    """Query SQLite for structured data"""
+    conn = sqlite3.connect(SQLITE_DB)
+    c = conn.cursor()
+    
+    # Example: Find methods by name
+    c.execute('''SELECT class_name, item_name, text_content 
+                 FROM documents 
+                 WHERE item_name LIKE ? AND content_type = 'method'
+                 LIMIT 5''', (f'%{query_text}%',))
+    
+    results = c.fetchall()
+    conn.close()
+    
+    return results
 
-# === Initialize embedding model ===
-embed_model = OllamaEmbedding(model_name="all-minilm")
-dimension = len(embed_model.get_text_embedding("test"))
-
-# === Create FAISS indexes ===
-faiss_indexes = {
-    "description": faiss.IndexFlatL2(dimension),
-    "details": faiss.IndexFlatL2(dimension),
-    "example": faiss.IndexFlatL2(dimension),
-}
-
-# === Helper: add embedding safely ===
-def add_to_faiss(index_name, text):
-    if not text or not text.strip():
-        return None
-    vector = embed_model.get_text_embedding(text)
-    vector = np.array(vector, dtype='float32')  # Convert list to numpy array
-    idx = faiss_indexes[index_name].ntotal
-    faiss_indexes[index_name].add(vector.reshape(1, -1))
-    return idx
-
-# === Connect to DB ===
-conn = sqlite3.connect(DB_PATH)
-init_db(conn)
-cur = conn.cursor()
-
-# === Process JSON ===
-row_count = 0
-for section, objects in data.items():
-    for obj, fields in objects.items():
-        member_name = obj.split(".")[-1]
-        object_name = obj.split(".")[0]
-        member_type = "method" if "()" in obj else "property"
+def main():
+    print("Loading query engine...")
+    query_engine = load_query_engine()
+    
+    print("\nPremiere Pro Documentation Assistant")
+    print("=" * 50)
+    print("Type 'quit' to exit\n")
+    
+    while True:
+        user_query = input("\nYour question: ").strip()
         
-        desc = fields.get("description", "")
-        details = fields.get("details", "")
-        example = fields.get("example", "")
-        params = fields.get("parameters", "")
-        returns = fields.get("returns", "")
-        signature = (fields.get("signature") or details or "").replace("<p>", "").replace("</p>", "").strip()
+        if user_query.lower() in ['quit', 'exit', 'q']:
+            break
         
-        faiss_id_desc = add_to_faiss("description", desc)
-        faiss_id_details = add_to_faiss("details", details)
-        faiss_id_example = add_to_faiss("example", example)
+        if not user_query:
+            continue
         
-        cur.execute("""
-            INSERT INTO metadata (
-                section, object_name, member_name, member_type,
-                full_signature, return_type, parameters,
-                faiss_id_description, faiss_id_details, faiss_id_example
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            section, object_name, member_name, member_type,
-            signature, returns, params,
-            faiss_id_desc, faiss_id_details, faiss_id_example
-        ))
+        print("\nSearching documentation...")
         
-        row_count += 1
-        if row_count % 200 == 0:
-            conn.commit()
-            print(f"Processed {row_count} entries...")
+        # Query with LlamaIndex
+        response = query_engine.query(user_query)
+        print(f"\nAnswer:\n{response}")
+        
+        # Show source metadata
+        if hasattr(response, 'source_nodes'):
+            print("\n\nSources:")
+            for i, node in enumerate(response.source_nodes, 1):
+                metadata = node.node.metadata
+                print(f"{i}. {metadata.get('title', 'Unknown')} "
+                      f"({metadata.get('section_type', 'Unknown')})")
+                print(f"   Relevance: {node.score:.3f}")
 
-conn.commit()
-conn.close()
-
-# === Save FAISS indexes ===
-for name, index in faiss_indexes.items():
-    path = FAISS_DIR / f"{name}.index"
-    faiss.write_index(index, str(path))
-    print(f"Saved {name}.index → {path}")
-
-print(f"\n✅ Indexed {row_count} metadata entries")
-print(f"SQLite DB → {DB_PATH}")
+if __name__ == "__main__":
+    main()
