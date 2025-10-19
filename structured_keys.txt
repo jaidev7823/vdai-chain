@@ -1,0 +1,59 @@
+title
+description
+sections
+  Properties
+    commands
+  Instance Methods
+      command
+        name
+        parameters
+        returns
+        details
+          content
+          Name
+          Type
+          Description
+  Static Methods
+  Events
+      Table
+        headers
+        rows
+          Version
+          code
+  Enumerations
+    MediaType
+    ContentType
+    TransitionPosition
+    TrackItemType
+    ProjectEvent
+    InterpolationMode
+    SequenceOperation
+    PropertyType
+    SequenceEvent
+    VideoTrackEvent
+    AudioTrackEvent
+    EncoderEvent
+    ScratchDiskFolderType
+    ScratchDiskFolder
+    MetadataType
+    ExportType
+    PreferenceKey
+    SnapEvent
+    OperationCompleteEvent
+    OperationCompleteState
+    PixelAspectRatio
+    VideoFieldType
+    VideoDisplayFormatType
+    AudioChannelType
+    AudioDisplayFormatType
+  System requirements
+      list
+  Reference material
+  Overview
+    Minimum Version
+  Synchronous vs Asynchronous
+  Working with Premiere Pro Objects
+    Premiere Pro Application
+  UXP Scripting
+  Useful links
+  Definition of Terms

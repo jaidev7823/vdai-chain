@@ -30,7 +30,7 @@ def decompose_query(query: str):
 
 # === Main Pipeline ===
 if __name__ == "__main__":
-    user_query = "i want my selected image to get crop vertically only 20 px should be visible and then scale that image so user focus becomes clear"
+    user_query = "i want to add glowing effect on the mobile in left the animation should be from top to making round on the mobile"
     plan = decompose_query(user_query)
 
     print("\n=== FINAL PLAN ===")
