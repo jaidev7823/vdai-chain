@@ -19,7 +19,7 @@ from llama_index.embeddings.ollama import OllamaEmbedding
 EMBEDDINGS_DIR = Path("embeddings")
 FAISS_DIR      = EMBEDDINGS_DIR / "faiss_indexes"
 SQLITE_DB      = EMBEDDINGS_DIR / "premiere_docs.db"
-EMBED_MODEL    = "all-minilm"
+EMBED_MODEL    = "embeddinggemma"
 LLM_MODEL      = "mistral"
 
 PROMPT_FILE    = Path("prompt/prompt.txt")   # your few-shot prompt lives here
@@ -55,7 +55,6 @@ class DocSearcher:
         self.emb = OllamaEmbedding(model_name=EMBED_MODEL, base_url="http://localhost:11434")
         self.conn = sqlite3.connect(SQLITE_DB)
         self.index = faiss.read_index(str(FAISS_DIR / "main.index"))
-
     # ---------- only public method we need ----------
     def nearest_api(self, text: str) -> list[dict]: # Change return type to list
         """Return top-K closest API records for arbitrary text."""
@@ -92,6 +91,11 @@ class DocSearcher:
                     "similarity": 1.0 / (1.0 + distance) # Inverse distance as score
                 })
         return results
+    
+    def close(self):
+        """Closes the SQLite database connection."""
+        self.conn.close()
+        
 # -----------------------------------------------------------
 # NEW: LLM-based re-ranker
 # -----------------------------------------------------------
@@ -147,7 +151,7 @@ def plan_and_pick(query: str) -> list[dict]:
             else:
                 step["best_api"] = None
     finally:
-        searcher.close()
+        searcher.close()  # <--- This line caused the error
     return plan
 
 # -----------------------------------------------------------
