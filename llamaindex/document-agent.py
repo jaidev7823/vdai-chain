@@ -7,6 +7,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 import faiss
 import os
+from pymongo import MongoClient
 
 # Initialize Faiss vector store
 embedding_dim = 768  # Adjust based on your embedding model
@@ -14,11 +15,20 @@ faiss_index = faiss.IndexFlatL2(embedding_dim)
 vector_store = FaissVectorStore(faiss_index=faiss_index)
 
 # Initialize MongoDB stores
-mongo_uri = "mongodb://127.0.0.1:27017"
+client = MongoClient("mongodb://127.0.0.1:27017")
 db_name = "llama_index"
 
-docstore = MongoDocumentStore(mongo_uri=mongo_uri, db_name=db_name, collection_name="documents")
-index_store = MongoIndexStore(mongo_uri=mongo_uri, db_name=db_name, collection_name="indexes")
+docstore = MongoDocumentStore(
+    client=client,
+    db_name=db_name,
+    collection_name="documents"
+)
+
+index_store = MongoIndexStore(
+    client=client,
+    db_name=db_name,
+    collection_name="indexes"
+)
 
 # Create storage context
 storage_context = StorageContext.from_defaults(
