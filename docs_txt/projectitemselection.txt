@@ -1,0 +1,7 @@
+Title: ProjectItemSelection
+Description: ProjectItem[]
+
+Section: Instance Methods
+  Subsection: getItems
+    Content: ProjectItem[]
+    Content: Get the project items that is represented by this selection.

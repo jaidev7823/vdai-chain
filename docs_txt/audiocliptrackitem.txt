@@ -1,0 +1,104 @@
+Title: AudioClipTrackItem
+Description: Action
+
+Section: Instance Methods
+  Subsection: createMoveAction
+    Content: Action
+    Content: Returns an action that moves the inPoint of the track item to a new time, by shifting it by a number of seconds.
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | -
+  Subsection: createSetDisabledAction
+    Content: Action
+    Content: Returns an action that enables/disables the trackItem
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    disabled | boolean | -
+  Subsection: createSetEndAction
+    Content: Action
+    Content: Create set end time action for sequence
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | -
+  Subsection: createSetInPointAction
+    Content: Action
+    Content: Create SetInPointAction for setting the track item in point relative to the start time of the project item referenced by this track item
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | Sets the In-Point in TickTime
+  Subsection: createSetNameAction
+    Content: Action
+    Content: Returns an action that renames the trackItem
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    inName | string | -
+  Subsection: createSetOutPointAction
+    Content: Action
+    Content: Create SetOutPointAction for setting the track item out point relative to the start time of the project item referenced by this track item
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | Sets the Out-Point in TickTime
+  Subsection: createSetStartAction
+    Content: Action
+    Content: Create set start time action for sequence
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | -
+  Subsection: getComponentChain
+    Content: AudioComponentChain
+    Content: Returns AudioComponentChain
+  Subsection: getDuration
+    Content: TickTime
+    Content: Returns timecode representing the duration of this track item relative to the sequence start.
+  Subsection: getEndTime
+    Content: TickTime
+    Content: Returns a TickTime object representing the ending sequence time of this track item relative to the sequence start time.
+  Subsection: getInPoint
+    Content: TickTime
+    Content: Returns a TickTime object representing the track item in point relative to the start time of the project item referenced by this track item.
+  Subsection: getIsSelected
+    Content: boolean
+    Content: Returns if trackItem is selected or not
+  Subsection: getMatchName
+    Content: string
+    Content: Returns the value of internal matchname for this trackItem
+  Subsection: getMediaType
+    Content: Guid
+    Content: Returns UUID representing the underlying media type of this track item
+  Subsection: getName
+    Content: string
+    Content: Returns the display name for trackItem
+  Subsection: getOutPoint
+    Content: TickTime
+    Content: Returns a TickTime object representing the track item out point relative to the start time of the project item referenced by this track item.
+  Subsection: getProjectItem
+    Content: ProjectItem
+    Content: Returns the project item for this track item.
+  Subsection: getSpeed
+    Content: number
+    Content: Returns the value of speed of the trackItem
+  Subsection: getStartTime
+    Content: TickTime
+    Content: Returns a TickTime object representing the starting sequence time of this track item relative to the sequence start time.
+  Subsection: getTrackIndex
+    Content: number
+    Content: Index representing the track index of the track this track item belongs to
+  Subsection: getType
+    Content: number
+    Content: Index representing the type of this track item.
+  Subsection: isAdjustmentLayer
+    Content: boolean
+    Content: Returns true if the trackitem is an adjustment layer
+  Subsection: isDisabled
+    Content: boolean
+    Content: Returns true if trackitem is muted/disabled
+  Subsection: isSpeedReversed
+    Content: number
+    Content: Returns true if the trackitem is reversed

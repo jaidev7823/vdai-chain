@@ -1,0 +1,15 @@
+Title: AudioFilterFactory
+Description: AudioFilterComponent
+
+Section: Static Methods
+  Subsection: createComponentByDisplayName
+    Content: AudioFilterComponent
+    Content: Creates a new audio filter component based on the input display name and trackItem for applying the audio filter
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    displayName | string | -
+    inAudioClipTrackItem | AudioClipTrackItem | -
+  Subsection: getDisplayNames
+    Content: string[]
+    Content: Returns an array of audio filter displayNames

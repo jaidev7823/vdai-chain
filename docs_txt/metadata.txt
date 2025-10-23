@@ -1,0 +1,61 @@
+Title: Metadata
+Description: boolean
+
+Section: Static Methods
+  Subsection: addPropertyToProjectMetadataSchema
+    Content: boolean
+    Content: Add name and label property to project metadata schema
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    name | string | -
+    label | string | -
+    type | number | -
+  Subsection: createSetProjectMetadataAction
+    Content: Action
+    Content: Get set project metadata action
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    projectItem | ProjectItem | -
+    metadata | string | -
+    updatedFields | string[] | -
+  Subsection: createSetXMPMetadataAction
+    Content: Action
+    Content: Get set project XMP metadata action
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    projectItem | ProjectItem | -
+    metadata | string | -
+  Subsection: getProjectColumnsMetadata
+    Content: string
+    Content: Get project column metadata from project item
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    projectItem | ProjectItem | -
+  Subsection: getProjectMetadata
+    Content: string
+    Content: Get project metadata
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    projectItem | ProjectItem | -
+  Subsection: getProjectPanelMetadata
+    Content: string
+    Content: Get project panel metadata
+  Subsection: getXMPMetadata
+    Content: string
+    Content: Get project XMP metadata
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    projectItem | ProjectItem | -
+  Subsection: setProjectPanelMetadata
+    Content: boolean
+    Content: Set project panel metadata
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    metadata | string | -

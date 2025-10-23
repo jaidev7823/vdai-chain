@@ -1,0 +1,17 @@
+Title: VideoFilterFactory
+Description: VideoFilterComponent
+
+Section: Static Methods
+  Subsection: createComponent
+    Content: VideoFilterComponent
+    Content: Creates a new video filter component based on the input matchName
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    matchName | string | The match name of the component to create, example 'PR.ADBE Solarize', 'AE.ADBE Mosaic' etc..
+  Subsection: getDisplayNames
+    Content: string[]
+    Content: Returns an array of video filter display names
+  Subsection: getMatchNames
+    Content: string[]
+    Content: Returns an array of video filter matchNames

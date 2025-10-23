@@ -1,0 +1,45 @@
+Title: Markers
+Description: Markers
+
+Section: Static Methods
+  Subsection: getMarkers
+    Content: Markers
+    Content: Returns the Markers object for Sequence Or ProjectItem
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    markerOwnerObject | SequenceorProjectItem | -
+Section: Instance Methods
+  Subsection: createAddMarkerAction
+    Content: Action
+    Content: Add a new marker
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    Name | string | -
+    markerType | string | -
+    startTime | TickTime | -
+    duration | TickTime | -
+    comments | string | -
+  Subsection: createMoveMarkerAction
+    Content: Action
+    Content: Move the given marker at new time value
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    marker | Marker | -
+    tickTime | TickTime | -
+  Subsection: createRemoveMarkerAction
+    Content: Action
+    Content: Remove the given marker
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    marker | Marker | -
+  Subsection: getMarkers
+    Content: Marker[]
+    Content: Get all markers
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    filters | string[] | Marker Type Filter (Optional)

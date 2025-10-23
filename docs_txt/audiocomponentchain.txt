@@ -1,0 +1,36 @@
+Title: AudioComponentChain
+Description: Action
+
+Section: Instance Methods
+  Subsection: createAppendComponentAction
+    Content: Action
+    Content: Creates and returns an append component action
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    component | ComponentorAudioFilterComponent | Audio filter component
+  Subsection: createInsertComponentAction
+    Content: Action
+    Content: Creates and returns an insert component action
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    component | ComponentorAudioFilterComponent | Audio filter component
+    componentInsertionIndex | number | Index which the component shall be inserted
+  Subsection: createRemoveComponentAction
+    Content: Action
+    Content: Creates and returns an remove component action
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    component | ComponentorAudioFilterComponent | Audio filter component
+  Subsection: getComponentAtIndex
+    Content: Component
+    Content: Returns the component at the given index
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    componentIndex | number | -
+  Subsection: getComponentCount
+    Content: number
+    Content: Gets the number of components in the component chain

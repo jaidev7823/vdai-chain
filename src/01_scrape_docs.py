@@ -1,179 +1,116 @@
 import os
-import json
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 BASE_URL = "https://developer.adobe.com/premiere-pro/uxp/ppro_reference/"
-OUT_DIR = "docs_json"
+OUT_DIR = "docs_txt"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 def parse_table(table):
-    """Parse table and preserve structure"""
     headers = [th.get_text(strip=True) for th in table.select("thead th")]
     if not headers:
         first_row = table.select_one("tr")
         if first_row:
             headers = [td.get_text(strip=True) for td in first_row.select("td, th")]
-    
+
     rows = []
     for tr in table.select("tbody tr") if table.select("tbody tr") else table.select("tr")[1:]:
         cells = [td.get_text(strip=True) for td in tr.select("td")]
-        if cells and len(cells) == len(headers):
-            rows.append(dict(zip(headers, cells)))
-        elif cells:
+        if cells:
             rows.append(cells)
-    
-    return {"headers": headers, "rows": rows} if headers else {"rows": rows}
 
-def normalize_commands(section_dict):
-    """Convert a section like Instance Methods to commands array"""
-    commands = []
-    
-    for key, value in section_dict.items():
-        if key == "content":
-            # Skip generic content
-            continue
-            
-        command_obj = {
-            "command": {
-                "name": key,
-                "description": None,
-                "parameters": None,
-                "returns": None,
-                "details": []
-            }
-        }
-        
-        # Value is a list of content items
-        if isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    if "content" in item:
-                        # Text description
-                        if command_obj["command"]["description"] is None:
-                            command_obj["command"]["description"] = item["content"]
-                        else:
-                            command_obj["command"]["details"].append(item)
-                    
-                    elif "Table" in item:
-                        # Determine table type from headers
-                        table = item["Table"]
-                        if isinstance(table, dict) and "headers" in table:
-                            headers = [h.lower() for h in table["headers"]]
-                            
-                            # Parameter table
-                            if any(h in headers for h in ["parameter", "param", "name", "type"]):
-                                command_obj["command"]["parameters"] = table["rows"]
-                            # Return value table
-                            elif any(h in headers for h in ["return", "returns", "type"]):
-                                command_obj["command"]["returns"] = table["rows"]
-                            else:
-                                command_obj["command"]["details"].append(item)
-                        else:
-                            command_obj["command"]["details"].append(item)
-                    
-                    else:
-                        # Other structured content (lists, code, etc.)
-                        command_obj["command"]["details"].append(item)
-        
-        elif isinstance(value, str):
-            command_obj["command"]["description"] = value
-        
-        # Clean up empty fields
-        if not command_obj["command"]["details"]:
-            del command_obj["command"]["details"]
-        
-        commands.append(command_obj)
-    
-    return {"commands": commands}
+    lines = []
+    if headers:
+        lines.append("    " + " | ".join(headers))
+        for r in rows:
+            lines.append("    " + " | ".join(r))
+    else:
+        for r in rows:
+            lines.append("    " + " | ".join(r))
+    return "\n".join(lines)
+
+def write_line(buf, text, indent=0):
+    buf.append("  " * indent + text)
 
 def parse_div(div):
-    data = {"title": None, "description": None, "sections": []}
-    current_section = None
-    current_section_key = None
-    current_subkey = None
-
-    # Find h1 first
+    buf = []
     h1 = div.find("h1")
     if h1:
-        data["title"] = h1.get_text(strip=True)
-        # Next siblings until first h2 or p
-        for sibling in h1.find_next_siblings():
-            if sibling.name == "h2":
-                break
-            if sibling.name == "p":
-                data["description"] = sibling.get_text(strip=True)
-                break
+        write_line(buf, f"Title: {h1.get_text(strip=True)}")
+
+    desc = None
+    for sibling in div.find_all("p", recursive=False):
+        desc = sibling.get_text(strip=True)
+        if desc:
+            break
+    if desc:
+        write_line(buf, f"Description: {desc}")
+    buf.append("")
+
+    current_section = None
+    current_sub = None
 
     for el in div.find_all(recursive=False):
         if el.name == "h1":
             continue
 
         elif el.name == "h2":
-            # Save previous section
-            if current_section_key and current_section:
-                # Check if this looks like a methods/properties section
-                if any(keyword in current_section_key.lower() for keyword in ["method", "function", "property", "properties"]):
-                    current_section = normalize_commands(current_section)
-                data["sections"].append({current_section_key: current_section})
-            
-            current_section_key = el.get_text(strip=True)
-            current_section = {}
-            current_subkey = None
+            current_section = el.get_text(strip=True)
+            write_line(buf, f"Section: {current_section}")
+            current_sub = None
 
         elif el.name in ["h3", "h4"]:
-            current_subkey = el.get_text(strip=True)
-            if current_section is None:
-                current_section = {}
-            if current_subkey not in current_section:
-                current_section[current_subkey] = []
+            current_sub = el.get_text(strip=True)
+            write_line(buf, f"  Subsection: {current_sub}")
 
         elif el.name == "p":
             text = el.get_text(strip=True)
-            if current_section is None:
-                current_section = {}
-            if current_subkey:
-                current_section[current_subkey].append({"content": text})
+            if current_sub:
+                write_line(buf, f"    Content: {text}")
+            elif current_section:
+                write_line(buf, f"  Content: {text}")
             else:
-                current_section.setdefault("content", []).append({"content": text})
+                write_line(buf, f"Content: {text}")
 
         elif el.name == "table":
-            table_data = parse_table(el)
-            if current_section is None:
-                current_section = {}
-            if current_subkey:
-                current_section[current_subkey].append({"Table": table_data})
+            table_text = parse_table(el)
+            if current_sub:
+                write_line(buf, "    Table:")
+                buf.append(table_text)
+            elif current_section:
+                write_line(buf, "  Table:")
+                buf.append(table_text)
             else:
-                current_section.setdefault("content", []).append({"Table": table_data})
+                write_line(buf, "Table:")
+                buf.append(table_text)
 
         elif el.name in ["ul", "ol"]:
-            lst = [li.get_text(strip=True) for li in el.select("li")]
-            if current_section is None:
-                current_section = {}
-            if current_subkey:
-                current_section[current_subkey].append({"list": lst})
-            else:
-                current_section.setdefault("content", []).append({"list": lst})
+            items = [li.get_text(strip=True) for li in el.select("li")]
+            for li in items:
+                if current_sub:
+                    write_line(buf, f"    - {li}")
+                elif current_section:
+                    write_line(buf, f"  - {li}")
+                else:
+                    write_line(buf, f"- {li}")
 
         elif el.name in ["pre", "code"]:
             code_text = el.get_text()
-            if current_section is None:
-                current_section = {}
-            if current_subkey:
-                current_section[current_subkey].append({"code": code_text})
+            if current_sub:
+                write_line(buf, "    Code:")
+                for line in code_text.splitlines():
+                    write_line(buf, f"      {line}")
+            elif current_section:
+                write_line(buf, "  Code:")
+                for line in code_text.splitlines():
+                    write_line(buf, f"    {line}")
             else:
-                current_section.setdefault("content", []).append({"code": code_text})
+                write_line(buf, "Code:")
+                for line in code_text.splitlines():
+                    write_line(buf, f"  {line}")
 
-    # Append last section
-    if current_section_key and current_section:
-        if any(keyword in current_section_key.lower() for keyword in ["method", "function", "property", "properties"]):
-            current_section = normalize_commands(current_section)
-        data["sections"].append({current_section_key: current_section})
-    elif current_section:
-        data["sections"].append(current_section)
-
-    return data
+    return "\n".join(buf)
 
 def scrape_page(url):
     try:
@@ -185,8 +122,8 @@ def scrape_page(url):
             return
         parsed = parse_div(div)
         fname = url.rstrip("/").split("/")[-1] or "index"
-        with open(f"{OUT_DIR}/{fname}.json", "w", encoding="utf-8") as f:
-            json.dump(parsed, f, ensure_ascii=False, indent=2)
+        with open(f"{OUT_DIR}/{fname}.txt", "w", encoding="utf-8") as f:
+            f.write(parsed)
         print("saved", fname)
     except Exception as e:
         print("fail", url, e)

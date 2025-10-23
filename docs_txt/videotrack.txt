@@ -1,0 +1,39 @@
+Title: VideoTrack
+Description: number
+
+Section: Properties
+  Table:
+    Name | Type | Access | Min Version | Description
+    name | string | R | 25.0 | Get the name of the track
+    id | number | R | 25.0 | The ID of the track within the TrackGroup
+Section: Instance Methods
+  Subsection: getIndex
+    Content: number
+    Content: Index representing the track index of this track within the track group.
+  Subsection: getMediaType
+    Content: Guid
+    Content: UUID representing the underlying media type of this track
+  Subsection: getTrackItems
+    Content: VideoClipTrackItem[]
+    Content: Returns array of VideoClipTrackItem from the track item type
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    trackItemType | Constants.TrackItemType | This values can be Empty (0), Clip (1), Transition (2), Preview (3) or Feedback (4)
+    includeEmptyTrackItems | boolean | -
+  Subsection: isMuted
+    Content: boolean
+    Content: Get mute state of the track
+  Subsection: setMute
+    Content: boolean
+    Content: sets the mute state of the track to muted/unmuted
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    mute | boolean | -
+Section: Events
+  Table:
+    Name | Version | Description
+    EVENT_TRACK_CHANGED | 25.0 | Event Object for Track changed
+    EVENT_TRACK_INFO_CHANGED | 25.0 | Event Object for Track Info Changed
+    EVENT_TRACK_LOCK_CHANGED | 25.0 | Event Object for Track Lock Changed

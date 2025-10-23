@@ -1,0 +1,56 @@
+Title: Marker
+Description: Action
+
+Section: Instance Methods
+  Subsection: createSetCommentsAction
+    Content: Action
+    Content: Return an action to set the comments of the marker.
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    comments | string | -
+  Subsection: createSetDurationAction
+    Content: Action
+    Content: Return an action to set the duration of the marker.
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    tickTime | TickTime | -
+  Subsection: createSetNameAction
+    Content: Action
+    Content: Return an action to set the name of the marker.
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    name | string | -
+  Subsection: createSetTypeAction
+    Content: Action
+    Content: Return an action to set the type of the marker.
+  Subsection: Parameters
+    Table:
+    Name | Type | Description
+    markerType | string | This values can be Scale (0), AnchorToInPoint (1) or AnchorToOutPoint (2)
+  Subsection: getColor
+    Content: Color
+    Content: Get color code of the marker.
+  Subsection: getComments
+    Content: string
+    Content: Get comments of the marker.
+  Subsection: getDuration
+    Content: TickTime
+    Content: Get duration time of the marker.
+  Subsection: getName
+    Content: string
+    Content: Get name of the marker.
+  Subsection: getStart
+    Content: TickTime
+    Content: Get start time of the marker.
+  Subsection: getTarget
+    Content: string
+    Content: Get target of the marker. Used together with url for web targets.
+  Subsection: getType
+    Content: string
+    Content: Get type of the marker. e.g. Cue / Track / Subclip / Cart
+  Subsection: getUrl
+    Content: string
+    Content: Get url of the marker.
