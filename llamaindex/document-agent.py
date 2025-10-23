@@ -18,17 +18,18 @@ vector_store = FaissVectorStore(faiss_index=faiss_index)
 client = MongoClient("mongodb://127.0.0.1:27017")
 db_name = "llama_index"
 
-docstore = MongoDocumentStore(
-    client=client,
-    db_name=db_name,
+docstore = MongoDocumentStore.from_uri(
+    uri="mongodb://127.0.0.1:27017",
+    db_name="llama_index",
     collection_name="documents"
 )
 
-index_store = MongoIndexStore(
-    client=client,
-    db_name=db_name,
+index_store = MongoIndexStore.from_uri(
+    uri="mongodb://127.0.0.1:27017",
+    db_name="llama_index",
     collection_name="indexes"
 )
+
 
 # Create storage context
 storage_context = StorageContext.from_defaults(
