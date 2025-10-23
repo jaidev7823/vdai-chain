@@ -20,15 +20,8 @@ db_name = "llama_index"
 
 docstore = MongoDocumentStore.from_uri(
     uri="mongodb://127.0.0.1:27017",
-    db_name="llama_index",
-    collection_name="documents"
 )
-
-index_store = MongoIndexStore.from_uri(
-    uri="mongodb://127.0.0.1:27017",
-    db_name="llama_index",
-    collection_name="indexes"
-)
+index_store = MongoIndexStore.from_uri(uri="mongodb://127.0.0.1:27017")
 
 
 # Create storage context
