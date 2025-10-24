@@ -63,7 +63,6 @@ def log_token_count(query, nodes):
     token_count = len(tokenizer(full_input))
     logger.info(f"Total tokens sent to LLM: {token_count}")
     return token_count
-
 # Query
 query = "what we can use to create returna and insert component action?"
 retrieved_nodes = index.as_retriever(similarity_top_k=2).retrieve(query)
