@@ -7,7 +7,10 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.gemini import Gemini
 from llama_index.core.node_parser import SentenceSplitter
 import faiss
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,8 +20,8 @@ splitter = SentenceSplitter(chunk_size=256, chunk_overlap=32)
 
 # Set LLM and embedding model
 Settings.llm = Gemini(
-    model="models/gemini-2.5-flash",  # Use Gemini model
-    api_key=""  # Replace with your Gemini API key
+    model="models/gemini-2.5-flash",
+    api_key=api_key
 )
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
 
