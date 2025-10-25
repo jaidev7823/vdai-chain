@@ -65,7 +65,7 @@ index = VectorStoreIndex.from_documents(
 )
 
 # Persist Faiss to disk
-faiss.write_index(faiss_index, faiss_file_path)
+faiss.write_index(vector_store._faiss_index, faiss_file_path)
 logger.info(f"Faiss index persisted at {faiss_file_path}")
 
 logger.info("Index creation and storage complete")

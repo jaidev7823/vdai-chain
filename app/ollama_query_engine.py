@@ -1,11 +1,10 @@
 import logging
 import os
-from dotenv import load_dotenv
 import faiss
 
 from llama_index.core import StorageContext, Settings, load_index_from_storage
 from llama_index.embeddings.ollama import OllamaEmbedding
-from llama_index.llms.google_genai import GoogleGenAI
+from llama_index.llms.ollama import Ollama
 from llama_index.vector_stores.faiss import FaissVectorStore
 from llama_index.storage.docstore.mongodb import MongoDocumentStore
 from llama_index.storage.index_store.mongodb import MongoIndexStore
@@ -13,12 +12,9 @@ from llama_index.storage.index_store.mongodb import MongoIndexStore
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-
-# LLM and embedding model
-Settings.llm = GoogleGenAI(model="models/gemini-2.5-flash", api_key=api_key)
-Settings.embed_model = OllamaEmbedding(model_name="embeddinggemma", base_url="http://localhost:11434")
+# LLM and embedding model (local Ollama)
+llm = Ollama(model="phi3:latest")  # local model
+embed_model = OllamaEmbedding(model_name="embeddinggemma:latest", base_url="http://localhost:11434")  # embeddings still local
 
 # MongoDB stores
 mongo_uri = "mongodb://127.0.0.1:27017/llama_index"
@@ -38,13 +34,15 @@ storage_context = StorageContext.from_defaults(
 )
 
 # Load index fully (nodes + Faiss vectors)
-index = load_index_from_storage(storage_context)
-
+index = load_index_from_storage(
+    storage_context,
+    embed_model=embed_model
+)
 # Create query engine
-query_engine = index.as_query_engine(similarity_top_k=1, response_mode="compact")
+query_engine = index.as_query_engine(similarity_top_k=2, response_mode="compact",llm=llm)
 
 # Query
-query = "how to set transition of duaration"
+query = "how to set transition of duration"
 retrieved_nodes = index.as_retriever(similarity_top_k=2).retrieve(query)
 context = "\n".join([node.text for node in retrieved_nodes])
 logger.info(f"Query: {query}\nContext:\n{context}")
