@@ -7,6 +7,7 @@ from llama_index.core.workflow import (
 )
 import asyncio
 from llama_index.utils.workflow import draw_all_possible_flows
+import random
 
 class FirstEvent(Event):
     first_output: str
@@ -14,11 +15,18 @@ class FirstEvent(Event):
 class SecondEvent(Event):
     second_output: str
 
+class LoopEvent(Event):
+    loop_output: str
+
 class MyWorkflow(Workflow):
     @step
-    async def step_one(self, ev: StartEvent) -> FirstEvent:
-        print(ev.first_input)
-        return FirstEvent(first_output="First step complete.")
+    async def step_one(self, ev: StartEvent | LoopEvent) -> FirstEvent | LoopEvent:
+        if random.randint(0, 1) == 0:
+            print("Bad thing happened")
+            return LoopEvent(loop_output="Back to step one.")
+        else:
+            print("Good thing happened")
+            return FirstEvent(first_output="First step complete.")
 
     @step
     async def step_two(self, ev: FirstEvent) -> SecondEvent:
