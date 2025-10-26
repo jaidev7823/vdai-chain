@@ -9,37 +9,54 @@ import asyncio
 from llama_index.utils.workflow import draw_all_possible_flows
 import random
 
-class FirstEvent(Event):
-    first_output: str
+class BranchA1Event(Event):
+    payload: str
 
-class SecondEvent(Event):
-    second_output: str
 
-class LoopEvent(Event):
-    loop_output: str
+class BranchA2Event(Event):
+    payload: str
 
-class MyWorkflow(Workflow):
+
+class BranchB1Event(Event):
+    payload: str
+
+
+class BranchB2Event(Event):
+    payload: str
+
+
+class BranchWorkflow(Workflow):
     @step
-    async def step_one(self, ev: StartEvent | LoopEvent) -> FirstEvent | LoopEvent:
+    async def start(self, ev: StartEvent) -> BranchA1Event | BranchB1Event:
         if random.randint(0, 1) == 0:
-            print("Bad thing happened")
-            return LoopEvent(loop_output="Back to step one.")
+            print("Go to branch A")
+            return BranchA1Event(payload="Branch A")
         else:
-            print("Good thing happened")
-            return FirstEvent(first_output="First step complete.")
+            print("Go to branch B")
+            return BranchB1Event(payload="Branch B")
 
     @step
-    async def step_two(self, ev: FirstEvent) -> SecondEvent:
-        print(ev.first_output)
-        return SecondEvent(second_output="Second step complete.")
+    async def step_a1(self, ev: BranchA1Event) -> BranchA2Event:
+        print(ev.payload)
+        return BranchA2Event(payload=ev.payload)
 
     @step
-    async def step_three(self, ev: SecondEvent) -> StopEvent:
-        print(ev.second_output)
-        return StopEvent(result="Workflow complete.")
+    async def step_b1(self, ev: BranchB1Event) -> BranchB2Event:
+        print(ev.payload)
+        return BranchB2Event(payload=ev.payload)
 
+    @step
+    async def step_a2(self, ev: BranchA2Event) -> StopEvent:
+        print(ev.payload)
+        return StopEvent(result="Branch A complete.")
+
+    @step
+    async def step_b2(self, ev: BranchB2Event) -> StopEvent:
+        print(ev.payload)
+        return StopEvent(result="Branch B complete.")
+    
 draw_all_possible_flows(
-    MyWorkflow,
+    BranchWorkflow,
     filename="basic_workflow.html",
     # Optional, can limit long event names in your workflow
     # Can help with readability
@@ -47,7 +64,7 @@ draw_all_possible_flows(
 )
 
 async def main():
-    w = MyWorkflow(timeout=10, verbose=False)
+    w = BranchWorkflow(timeout=10, verbose=False)
     result = await w.run(first_input="Start the workflow.")
     print(result)
 
