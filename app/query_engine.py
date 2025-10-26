@@ -41,11 +41,11 @@ storage_context = StorageContext.from_defaults(
 index = load_index_from_storage(storage_context)
 
 # Create query engine
-query_engine = index.as_query_engine(similarity_top_k=2, response_mode="compact")
+query_engine = index.as_query_engine(similarity_top_k=10, response_mode="compact")
 
 # Query
-query = "how to select clip from sequence" 
-retrieved_nodes = index.as_retriever(similarity_top_k=2).retrieve(query)
+query = "Where is the AnAnywhere object available" 
+retrieved_nodes = index.as_retriever(similarity_top_k=10).retrieve(query)
 context = "\n".join([node.text for node in retrieved_nodes])
 logger.info(f"Query: {query}\nContext:\n{context}")
 
