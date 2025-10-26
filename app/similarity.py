@@ -36,8 +36,18 @@ class LlamaIndexSplitRetriever:
         self.k = k
 
     def get_relevant_docs(self, query: str):
-        query_vector = np.array(self.embeddings.embed_query(query)).reshape(1, -1)
-        D, I = self.faiss_index.search(query_vector, self.k)
+        if faiss_index is not None:
+            query_vector = np.array(embeddings.embed_query("How to set backend preference?")).reshape(1, -1)
+            D, I = faiss_index.search(query_vector, 2)
+            print("Distances:", D)
+            print("Indices:", I)
+            if I[0][0] != -1:
+                db = client[DOCSTORE_DB]
+                col = db[DOCSTORE_COLLECTION]
+                for idx in I[0]:
+                    doc = col.find_one({"doc_id": int(idx.item())})
+                    print(doc)
+
         db = self.mongo_client[DOCSTORE_DB]
         collection = db[DOCSTORE_COLLECTION]
         docs = []

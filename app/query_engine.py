@@ -41,10 +41,10 @@ storage_context = StorageContext.from_defaults(
 index = load_index_from_storage(storage_context)
 
 # Create query engine
-query_engine = index.as_query_engine(similarity_top_k=1, response_mode="compact")
+query_engine = index.as_query_engine(similarity_top_k=2, response_mode="compact")
 
 # Query
-query = "how to set transition of duaration"
+query = "how can we select clip" 
 retrieved_nodes = index.as_retriever(similarity_top_k=2).retrieve(query)
 context = "\n".join([node.text for node in retrieved_nodes])
 logger.info(f"Query: {query}\nContext:\n{context}")

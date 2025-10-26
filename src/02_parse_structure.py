@@ -3,7 +3,7 @@ import requests
 from collections import defaultdict
 
 # Download JSON
-url = "https://ppro-scripting.docsforadobe.dev/search/search_index.json"
+url = "https://extendscript.docsforadobe.dev/"
 response = requests.get(url)
 response.raise_for_status()
 raw = response.json()

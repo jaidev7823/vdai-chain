@@ -1,7 +1,0 @@
-Title: Utils
-Description: boolean
-
-Section: Static Methods
-  Subsection: isAEInstalled
-    Content: boolean
-    Content: Check if AE is installed.
