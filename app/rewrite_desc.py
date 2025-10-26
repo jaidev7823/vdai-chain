@@ -1,29 +1,42 @@
 import os
-from llama_index.llms.ollama import Ollama
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 INPUT_DIR = "docs_txt"
 OUTPUT_DIR = "docs_txt_natural"
-
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Initialize Ollama LLaMA 3.2
-llm = Ollama(model="llama3.2")
+OLLAMA_API_URL = "http://localhost:11434/api/chat"
+MODEL_NAME = "llama3.1:8b"
 
 def generate_natural_description(text):
-    """
-    Generate a natural language description from structured function text.
-    """
-    prompt = (
+    prompt_text = (
         "Rewrite the following function documentation into a single natural-language paragraph. "
         "Include what the function does, how to use it, any limitations or dependencies. "
         "Do not include headings or tables, just natural flowing text:\n\n"
         f"{text}\n\nNatural paragraph:"
     )
-    result = llm.complete(prompt)
-    return result.text.strip()
+    payload = {
+        "model": MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt_text}
+        ],
+        "temperature": 0.2,
+        "stream": False  # Important: disable streaming for simpler parsing
+    }
+    try:
+        response = requests.post("http://localhost:11434/api/chat", json=payload)
+        response.raise_for_status()
+        data = response.json()
+        # The response structure is: {"message": {"content": "..."}, ...}
+        return data.get("message", {}).get("content", "").strip()
+    except Exception as e:
+        print(f"Failed to get completion: {e}")
+        return ""
+
 
 def process_file(input_path, output_path):
     with open(input_path, "r", encoding="utf-8") as f:
