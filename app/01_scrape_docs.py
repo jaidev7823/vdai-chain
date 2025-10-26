@@ -70,9 +70,8 @@ def extract_functions(soup):
         function_name = h3_text
         description = "None"
         parameters = []
-        variants = []
         
-        # Look for description and variants in following siblings
+        # Look for description in following siblings
         current = h3.find_next_sibling()
         while current:
             # Check if we've hit another h3 (next function)
@@ -84,15 +83,6 @@ def extract_functions(soup):
                 desc_elem = current.find_next_sibling()
                 if desc_elem:
                     description = desc_elem.get_text(strip=True)
-            
-            # Look for function variants in <p> tags with <code> tags
-            if current.name == 'p':
-                code_tags = current.find_all('code')
-                for code in code_tags:
-                    code_text = code.get_text(strip=True)
-                    # Check if code content looks like a function variant
-                    if is_likely_function(code_text) and code_text != function_name:
-                        variants.append(code_text)
             
             # Look for parameter table
             if current.name == 'table':
@@ -113,20 +103,11 @@ def extract_functions(soup):
             
             current = current.find_next_sibling()
         
-        # Add main function
         functions.append({
             'name': function_name,
             'description': description,
             'parameters': parameters
         })
-        
-        # Add variants as separate functions with same description and parameters
-        for variant in variants:
-            functions.append({
-                'name': variant,
-                'description': description,
-                'parameters': parameters
-            })
     
     return functions
 
@@ -159,35 +140,47 @@ def get_slug_from_url(url):
     return 'index'
 
 def scrape_page(url, output_dir):
-    """Scrape a single page and save to file"""
+    """Scrape a single page and save each function to its own file"""
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Extract functions
+
         functions = extract_functions(soup)
-        
-        if functions:
-            # Format output
-            output = format_output(functions)
-            
-            # Get filename from URL
-            slug = get_slug_from_url(url)
-            filename = os.path.join(output_dir, f"{slug}.txt")
-            
-            # Save to file
-            with open(filename, 'w', encoding='utf-8') as f:
-                f.write(output)
-            
-            print(f"saved {slug}.txt")
-        else:
+        if not functions:
             slug = get_slug_from_url(url)
             print(f"fail {slug}.txt (no functions found)")
-            
+            return
+
+        # Make subdirectory for this page
+        slug = get_slug_from_url(url)
+        page_dir = os.path.join(output_dir, slug)
+        os.makedirs(page_dir, exist_ok=True)
+
+        # Write each function to its own file
+        for func in functions:
+            func_name = func['name'].replace('/', '_').replace('\\', '_').replace(':', '_')
+            filename = os.path.join(page_dir, f"{func_name}.txt")
+
+            content = []
+            content.append(f"Function: {func['name']}")
+            content.append(f"Description: {func['description']}")
+            if func['parameters']:
+                params_list = []
+                for param in func['parameters']:
+                    params_list.append(f"{param['name']}|{param['type']}|{param['description']}")
+                content.append(f"Parameters: {', '.join(params_list)}")
+            else:
+                content.append("Parameters: None")
+
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(content))
+
+        print(f"saved {len(functions)} functions from {slug}.html")
+
     except Exception as e:
         slug = get_slug_from_url(url)
-        print(f"fail {slug}.txt")
+        print(f"fail {slug}.txt ({e})")
 
 def main():
     base_url = "https://ppro-scripting.docsforadobe.dev/"
