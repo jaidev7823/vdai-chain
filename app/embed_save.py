@@ -51,7 +51,7 @@ storage_context = StorageContext.from_defaults(
 )
 
 # ---- Read and index documents ----
-documents = SimpleDirectoryReader(input_dir="./docs_txt").load_data()
+documents = SimpleDirectoryReader(input_dir="./docs_txt", recursive=True).load_data()
 logger.info(f"Loaded {len(documents)} documents")
 
 index = VectorStoreIndex.from_documents(
