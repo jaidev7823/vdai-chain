@@ -9,47 +9,53 @@ from llama_index.core.workflow import (
 import asyncio
 from llama_index.utils.workflow import draw_all_possible_flows
 import random
+from pydantic import BaseModel, Field, field_validator, field_serializer
+from typing import Union
 
-class SetupEvent(Event):
-    query: str
+# This is a random object that we want to use in our state
+class MyRandomObject:
+    def __init__(self, name: str = "default"):
+        self.name = name
 
+# This is our state model
+# NOTE: all fields must have defaults
+class MyState(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+    my_obj: MyRandomObject = Field(default_factory=MyRandomObject)
+    some_key: str = Field(default="some_value")
 
-class StepTwoEvent(Event):
-    query: str
+    # This is optional, but can be useful if you want to control the serialization of your state!
 
+    @field_serializer("my_obj", when_used="always")
+    def serialize_my_obj(self, my_obj: MyRandomObject) -> str:
+        return my_obj.name
 
-class StatefulFlow(Workflow):
+    @field_validator("my_obj", mode="before")
+    @classmethod
+    def deserialize_my_obj(
+        cls, v: Union[str, MyRandomObject]
+    ) -> MyRandomObject:
+        if isinstance(v, MyRandomObject):
+            return v
+        if isinstance(v, str):
+            return MyRandomObject(v)
+
+        raise ValueError(f"Invalid type for my_obj: {type(v)}")
+
+class MyStatefulFlow(Workflow):
     @step
-    async def start(
-        self, ctx: Context, ev: StartEvent
-    ) -> SetupEvent | StepTwoEvent:
-        db = await ctx.store.get("some_database", default=None)
-        if db is None:
-            print("Need to load data")
-            return SetupEvent(query=ev.query)
-
-        # do something with the query
-        return StepTwoEvent(query=ev.query)
-
-    @step
-    async def setup(self, ctx: Context, ev: SetupEvent) -> StartEvent:
-        # load data
+    async def start(self, ctx: Context[MyState], ev: StartEvent) -> StopEvent:
+        # Allows for atomic state updates
         async with ctx.store.edit_state() as state:
-            state["some_database"] = [1, 2, 3]
-            state["metadata"] = {"initialized": True}
-        return StartEvent(query=ev.query)
-    
-    @step
-    async def step_two(self, ctx: Context, ev: StepTwoEvent) -> StopEvent:
-        async with ctx.store.edit_state() as state:
-            # you can also read+modify existing keys
-            state["run_count"] = state.get("run_count", 0) + 1
-        db = await ctx.store.get("some_database")
-        print("Data is ", db)
-        return StopEvent(result=db)
+            state.my_obj.name = "new_name"
+
+        # Can also access fields directly if needed
+        name = await ctx.store.get("my_obj.name")
+
+        return StopEvent(result="Done!")
 
 draw_all_possible_flows(
-    StatefulFlow,
+    MyStatefulFlow,
     filename="basic_workflow.html",
     # Optional, can limit long event names in your workflow
     # Can help with readability
@@ -57,8 +63,11 @@ draw_all_possible_flows(
 )
 
 async def main():
-    w = StatefulFlow(timeout=10, verbose=False)
-    result = await w.run(query="Some query")
-    print(result)
+    w = MyStatefulFlow(timeout=10, verbose=False)
+
+    ctx = Context(w)
+    result = await w.run(ctx=ctx)
+    state = await ctx.store.get_state()
+    print(state)
 
 asyncio.run(main())

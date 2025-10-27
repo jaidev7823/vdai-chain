@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#ADD8E6", "id": "_done", "label": "_done", "shape": "box", "title": null}, {"color": "#FFA07A", "id": "StopEvent", "label": "StopEvent", "shape": "ellipse", "title": null}, {"color": "#ADD8E6", "id": "setup", "label": "setup", "shape": "box", "title": null}, {"color": "#90EE90", "id": "SetupEvent", "label": "SetupEvent", "shape": "ellipse", "title": null}, {"color": "#E27AFF", "id": "StartEvent", "label": "StartEvent", "shape": "ellipse", "title": null}, {"color": "#ADD8E6", "id": "start", "label": "start", "shape": "box", "title": null}, {"color": "#90EE90", "id": "StepTwoEvent", "label": "StepTwoEvent", "shape": "ellipse", "title": null}, {"color": "#ADD8E6", "id": "step_two", "label": "step_two", "shape": "box", "title": null}]);
-                  edges = new vis.DataSet([{"arrows": "to", "from": "StopEvent", "to": "_done"}, {"arrows": "to", "from": "setup", "to": "StartEvent"}, {"arrows": "to", "from": "SetupEvent", "to": "setup"}, {"arrows": "to", "from": "start", "to": "SetupEvent"}, {"arrows": "to", "from": "start", "to": "StepTwoEvent"}, {"arrows": "to", "from": "StartEvent", "to": "start"}, {"arrows": "to", "from": "step_two", "to": "StopEvent"}, {"arrows": "to", "from": "StepTwoEvent", "to": "step_two"}]);
+                  nodes = new vis.DataSet([{"color": "#ADD8E6", "id": "_done", "label": "_done", "shape": "box", "title": null}, {"color": "#FFA07A", "id": "StopEvent", "label": "StopEvent", "shape": "ellipse", "title": null}, {"color": "#ADD8E6", "id": "start", "label": "start", "shape": "box", "title": null}, {"color": "#E27AFF", "id": "StartEvent", "label": "StartEvent", "shape": "ellipse", "title": null}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "StopEvent", "to": "_done"}, {"arrows": "to", "from": "start", "to": "StopEvent"}, {"arrows": "to", "from": "StartEvent", "to": "start"}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
