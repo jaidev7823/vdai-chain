@@ -4,59 +4,52 @@ from llama_index.core.workflow import (
     Workflow,
     step,
     Event,
+    Context,
 )
 import asyncio
 from llama_index.utils.workflow import draw_all_possible_flows
 import random
 
-class BranchA1Event(Event):
-    payload: str
+class SetupEvent(Event):
+    query: str
 
 
-class BranchA2Event(Event):
-    payload: str
+class StepTwoEvent(Event):
+    query: str
 
 
-class BranchB1Event(Event):
-    payload: str
-
-
-class BranchB2Event(Event):
-    payload: str
-
-
-class BranchWorkflow(Workflow):
+class StatefulFlow(Workflow):
     @step
-    async def start(self, ev: StartEvent) -> BranchA1Event | BranchB1Event:
-        if random.randint(0, 1) == 0:
-            print("Go to branch A")
-            return BranchA1Event(payload="Branch A")
-        else:
-            print("Go to branch B")
-            return BranchB1Event(payload="Branch B")
+    async def start(
+        self, ctx: Context, ev: StartEvent
+    ) -> SetupEvent | StepTwoEvent:
+        db = await ctx.store.get("some_database", default=None)
+        if db is None:
+            print("Need to load data")
+            return SetupEvent(query=ev.query)
+
+        # do something with the query
+        return StepTwoEvent(query=ev.query)
 
     @step
-    async def step_a1(self, ev: BranchA1Event) -> BranchA2Event:
-        print(ev.payload)
-        return BranchA2Event(payload=ev.payload)
-
-    @step
-    async def step_b1(self, ev: BranchB1Event) -> BranchB2Event:
-        print(ev.payload)
-        return BranchB2Event(payload=ev.payload)
-
-    @step
-    async def step_a2(self, ev: BranchA2Event) -> StopEvent:
-        print(ev.payload)
-        return StopEvent(result="Branch A complete.")
-
-    @step
-    async def step_b2(self, ev: BranchB2Event) -> StopEvent:
-        print(ev.payload)
-        return StopEvent(result="Branch B complete.")
+    async def setup(self, ctx: Context, ev: SetupEvent) -> StartEvent:
+        # load data
+        async with ctx.store.edit_state() as state:
+            state["some_database"] = [1, 2, 3]
+            state["metadata"] = {"initialized": True}
+        return StartEvent(query=ev.query)
     
+    @step
+    async def step_two(self, ctx: Context, ev: StepTwoEvent) -> StopEvent:
+        async with ctx.store.edit_state() as state:
+            # you can also read+modify existing keys
+            state["run_count"] = state.get("run_count", 0) + 1
+        db = await ctx.store.get("some_database")
+        print("Data is ", db)
+        return StopEvent(result=db)
+
 draw_all_possible_flows(
-    BranchWorkflow,
+    StatefulFlow,
     filename="basic_workflow.html",
     # Optional, can limit long event names in your workflow
     # Can help with readability
@@ -64,8 +57,8 @@ draw_all_possible_flows(
 )
 
 async def main():
-    w = BranchWorkflow(timeout=10, verbose=False)
-    result = await w.run(first_input="Start the workflow.")
+    w = StatefulFlow(timeout=10, verbose=False)
+    result = await w.run(query="Some query")
     print(result)
 
 asyncio.run(main())
